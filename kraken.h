@@ -26,12 +26,12 @@
 
 // architecture selection
 #ifndef KRAKEN_ARCH
-#if (defined(__x86_64) || defined(__x86_64__)) && __x86_64==1 || __x86_64__==1
+#if (defined(__x86_64) || defined(__x86_64__)) && (__x86_64==1 || __x86_64__==1)
 #define KRAKEN_ARCH KRAKEN_ARCH_X86_64
-#elif (defined(__i386) || defined(__i386__)) && __i386==1 || __i386__==1
+#elif (defined(__i386) || defined(__i386__)) && (__i386==1 || __i386__==1)
 #define KRAKEN_ARCH KRAKEN_ARCH_X86
 #else
-#define KRAKEN_ARCH 0x0
+#define KRAKEN_ARCH                     0x0
 #endif
 #endif
 
@@ -85,7 +85,8 @@ typedef void (*function_type)();
 void        kraken_initialize();
 void        kraken_run(int);
 int         kraken_start_thread();
-static void kraken_guard();
+static 
+void        kraken_guard();
 bool        kraken_yield();
 void        kraken_printt_state();
 void        kraken_switch (struct kraken_context*, struct kraken_context*);
@@ -102,11 +103,6 @@ void kraken_print_state() {
 }
 
 void __attribute__((noreturn)) kraken_run(int return_code) {
-    if (current_thread != &threads[0]) {
-        current_thread->status = STOPPED;
-        kraken_yield();
-        assert(!"reachable");
-    }
     while (kraken_yield()) ;
 
     // Free thread stack memory when done
@@ -158,7 +154,10 @@ __asm__ (
 );
 
 static void kraken_guard () {
-    kraken_run(0);
+    if (current_thread != &threads[0]) {
+        current_thread->status = STOPPED;
+        kraken_yield();
+    }
 }
 
 bool kraken_yield () {
