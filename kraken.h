@@ -1,10 +1,11 @@
 #ifndef KRAKEN_H
 #define KRAKEN_H
 
+#define KRAKEN_VERSION "0.9.1"
+
 // Scheduler implementation codes for preprocessor
-#define KRAKEN_SCHEDULER_SIMPLE_ARRAY   0x01
+#define KRAKEN_SCHEDULER_ROUND_ROBIN    0x01
 #define KRAKEN_SCHEDULER_FIFO           0x02
-#define KRAKEN_SCHEDULER_ROUND_ROBIN    KRAKEN_SCHEDULER_SIMPLE_ARRAY
 #define KRAKEN_SCHEDULER_FAIR           0x04
 
 // Architecture codes for preprocessor
@@ -14,17 +15,30 @@
 #define KRAKEN_ARCH_ARM                 0x14
 
 // Maximum number of threads
+#if !defined(KRAKEN_MAX_THREADS)
 #define KRAKEN_MAX_THREADS              4
+#endif
 
-//#if KRAKEN_ARCH==KRAKEN_ARCH_X86
-#define KRAKEN_STACK_SIZE               0x400000
-//#else
-//#define KRAKEN_STACK_SIZE               0x400000
-//#endif
+// Maxium stack size
+#if !defined( KRAKEN_STACK_SIZE )
+#define KRAKEN_STACK_SIZE               1024 * 1024 * 2
+#endif
 
-//#if NDEBUG
+// architecture selection
+#ifndef KRAKEN_ARCH
+#if (defined(__x86_64) || defined(__x86_64__)) && __x86_64==1 || __x86_64__==1
+#define KRAKEN_ARCH KRAKEN_ARCH_X86_64
+#elif (defined(__i386) || defined(__i386__)) && __i386==1 || __i386__==1
+#define KRAKEN_ARCH KRAKEN_ARCH_X86
+#else
+#define KRAKEN_ARCH 0x0
+#endif
+#endif
+
+// debug settings
+#ifdef KRAKEN_DEBUG
 #include <stdio.h>
-//#endif
+#endif
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -42,12 +56,12 @@ struct kraken_context {
     uint64_t rbp;
 #elif KRAKEN_ARCH==KRAKEN_ARCH_X86
     uint32_t esp;
-    uint32_t e15;
-    uint32_t e14;
-    uint32_t e13;
-    uint32_t e12;
     uint32_t ebx;
     uint32_t ebp;
+#elif KRAKEN_ARCH==KRAKEN_ARCH_AVR
+    uint8_t r20;
+    uint8_t r24;
+    uint8_t sp;
 #else
     #error "Architecture not defined or implemented for Kraken library!"
 #endif
@@ -69,21 +83,30 @@ struct kraken_thread *current_thread;
 typedef void (*function_type)();
 
 void        kraken_initialize();
-int         kraken_run(int);
+void        kraken_run(int);
 int         kraken_start_thread();
 static void kraken_guard();
 bool        kraken_yield();
 void        kraken_printt_state();
+void        kraken_switch (struct kraken_context*, struct kraken_context*);
+
 
 void kraken_print_state() {
+#ifdef KRAKEN_DEBUG
     printf("Thread table address %p\n", threads);
     for (int i = 0; i < KRAKEN_MAX_THREADS; i++) {
-        printf("\tThread %d stack starts at %p\n", i, 
-            (uint64_t*)threads[i].context.rsp);
+        printf("\tThread %d stack memory at %p\n", i, (uint64_t*)&threads[i]);
+        printf("\tThread %d stack starts at %p\n", i, (uint64_t*)threads[i].context.rsp);
     }
+#endif
 }
 
-int kraken_run(int return_code) {
+void __attribute__((noreturn)) kraken_run(int return_code) {
+    if (current_thread != &threads[0]) {
+        current_thread->status = STOPPED;
+        kraken_yield();
+        assert(!"reachable");
+    }
     while (kraken_yield()) ;
 
     // Free thread stack memory when done
@@ -102,41 +125,47 @@ void kraken_initialize_runtime() {
     current_thread->stack = (char*)malloc(KRAKEN_STACK_SIZE);
 }
 
-static void kraken_switch (struct kraken_context* old_ctx, struct kraken_context *new_ctx) {
-    __asm__ volatile (
-        "mov     %%rsp, 0x00(%0)\n\t"
-        "mov     %%r15, 0x08(%0)\n\t"
-        "mov     %%r14, 0x10(%0)\n\t"
-        "mov     %%r13, 0x18(%0)\n\t"
-        "mov     %%r12, 0x20(%0)\n\t"
-        "mov     %%rbx, 0x28(%0)\n\t"
-        "mov     %%rbp, 0x30(%0)\n\t"
-        "mov     0x00(%1), %%rsp\n\t"
-        "mov     0x08(%1), %%r15\n\t"
-        "mov     0x10(%1), %%r14\n\t"
-        "mov     0x18(%1), %%r13\n\t"
-        "mov     0x20(%1), %%r12\n\t"
-        "mov     0x28(%1), %%rbx\n\t"
-        "mov     0x30(%1), %%rbp\n\t"
-        "ret                    \n\t"
-        : 
-        : "r" (old_ctx), "r"(new_ctx)
-    );
-}
+__asm__ (
+    ".globl _kraken_switch, kraken_switch\n\t"
+    "_kraken_switch:         \n\t"
+    "kraken_switch:         \n\t"
+#if KRAKEN_ARCH==KRAKEN_ARCH_X86_64
+    "movq     %rsp, 0x00(%rdi)\n\t"
+    "movq     %r15, 0x08(%rdi)\n\t"
+    "movq     %r14, 0x10(%rdi)\n\t"
+    "movq     %r13, 0x18(%rdi)\n\t"
+    "movq     %r12, 0x20(%rdi)\n\t"
+    "movq     %rbx, 0x28(%rdi)\n\t"
+    "movq     %rbp, 0x30(%rdi)\n\t"
+    "movq     0x00(%rsi), %rsp\n\t"
+    "movq     0x08(%rsi), %r15\n\t"
+    "movq     0x10(%rsi), %r14\n\t"
+    "movq     0x18(%rsi), %r13\n\t"
+    "movq     0x20(%rsi), %r12\n\t"
+    "movq     0x28(%rsi), %rbx\n\t"
+    "movq     0x30(%rsi), %rbp\n\t"
+#elif KRAKEN_ARCH==KRAKEN_ARCH_X86
+    "movl     %esp, 0x00(%edi)\n\t"
+    "movl     %ebx, 0x28(%edi)\n\t"
+    "movl     %ebp, 0x30(%edi)\n\t"
+    "movl     0x00(%esi), %esp\n\t"
+    "movl     0x28(%esi), %ebx\n\t"
+    "movl     0x30(%esi), %ebp\n\t"
+#elif KRAKEN_ARCH==KRAKEN_ARCH_AVR
+
+#endif
+    "ret                     \n\t"
+);
 
 static void kraken_guard () {
-    if (current_thread != &threads[0]) {
-        current_thread->status = STOPPED;
-        kraken_yield();
-        assert(!"reachable");
-    }
+    kraken_run(0);
 }
 
 bool kraken_yield () {
     struct kraken_thread *other_thread;
     struct kraken_context *old_ctx, *new_ctx;
 
-#if KRAKEN_SCHEDULER==KRAKEN_SCHEDULER_SIMPLE_ARRAY
+#if KRAKEN_SCHEDULER==KRAKEN_SCHEDULER_ROUND_ROBIN
     other_thread = current_thread;
 
     while (other_thread->status != READY) {
@@ -167,7 +196,7 @@ bool kraken_yield () {
     // switch from old context to new context
     kraken_switch(old_ctx, new_ctx);
 
-    printf("returned from yield\n");
+    //printf("returned from yield\n");
     return true;
 }
 
@@ -175,7 +204,7 @@ bool kraken_yield () {
 int kraken_start_thread (function_type func) {
     struct kraken_thread* new_thread;
 
-#if KRAKEN_SCHEDULER==KRAKEN_SCHEDULER_SIMPLE_ARRAY
+#if KRAKEN_SCHEDULER==KRAKEN_SCHEDULER_ROUND_ROBIN
     // look for a home for the new thread;
     for (new_thread = &threads[0]; true ;new_thread++) {
         if (new_thread == &threads[KRAKEN_MAX_THREADS]) {
@@ -194,8 +223,13 @@ int kraken_start_thread (function_type func) {
     *(uint64_t *)&(new_thread->stack[KRAKEN_STACK_SIZE -  8]) = (uint64_t)kraken_guard;
     *(uint64_t *)&(new_thread->stack[KRAKEN_STACK_SIZE - 16]) = (uint64_t)func;
     new_thread->context.rsp = (uint64_t)&(new_thread->stack[KRAKEN_STACK_SIZE - 16]);
-    new_thread->status = READY;
+#elif KRAKEN_ARCH==KRAKEN_ARCH_X86
+    *(uint32_t *)&(new_thread->stack[KRAKEN_STACK_SIZE -  4]) = (uint32_t)kraken_guard;
+    *(uint32_t *)&(new_thread->stack[KRAKEN_STACK_SIZE -  8]) = (uint32_t)func;
+    new_thread->context.esp = (uint32_t)&(new_thread->stack[KRAKEN_STACK_SIZE - 8]);
 #endif
+
+    new_thread->status = READY;
 
     return 0;
 }
