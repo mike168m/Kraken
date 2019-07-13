@@ -21,7 +21,9 @@
 
 // Maxium stack size
 #if !defined( KRAKEN_STACK_SIZE )
-#define KRAKEN_STACK_SIZE               1024 * 1024 * 2
+#if KRAKEN_ARCH==KRAKEN_ARCH_X86
+#define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
+#endif
 #endif
 
 // architecture selection
@@ -77,8 +79,10 @@ struct kraken_thread {
     char* stack;
 };
 
-struct kraken_thread threads[KRAKEN_MAX_THREADS];
-struct kraken_thread *current_thread;
+struct kraken_runtime {
+    struct kraken_thread threads[KRAKEN_MAX_THREADS];
+    struct kraken_thread *current_thread;
+};
 
 typedef void (*function_type)();
 
@@ -92,23 +96,23 @@ void        kraken_printt_state();
 void        kraken_switch (struct kraken_context*, struct kraken_context*);
 
 
-void kraken_print_state() {
+void kraken_print_state (struct kraken_runtime* runtime) {
 #ifdef KRAKEN_DEBUG
-    printf("Thread table address %p\n", threads);
+    printf("Thread table address %p\n", runtime->threads);
     for (int i = 0; i < KRAKEN_MAX_THREADS; i++) {
-        printf("\tThread %d stack memory at %p\n", i, (uint64_t*)&threads[i]);
-        printf("\tThread %d stack starts at %p\n", i, (uint64_t*)threads[i].context.rsp);
+        printf("\tThread %d stack memory at %p\n", i, (uint64_t*)&runtime->threads[i]);
+        printf("\tThread %d stack starts at %p\n", i, (uint64_t*)runtime->threads[i].context.rsp);
     }
 #endif
 }
 
-void __attribute__((noreturn)) kraken_run(int return_code) {
+void __attribute__((noreturn)) kraken_run (kraken_runtime* runtime, int return_code) {
     while (kraken_yield()) ;
 
     // Free thread stack memory when done
     for (int i = 0; i < KRAKEN_MAX_THREADS; i++) {
-        if (&threads[i] != NULL) {
-            free(threads[i].stack);
+        if (&runtime->threads[i] != NULL) {
+            free(runtime->threads[i].stack);
         }
     }
 
@@ -140,6 +144,7 @@ __asm__ (
     "movq     0x20(%rsi), %r12\n\t"
     "movq     0x28(%rsi), %rbx\n\t"
     "movq     0x30(%rsi), %rbp\n\t"
+    "ret                      \n\t"
 #elif KRAKEN_ARCH==KRAKEN_ARCH_X86
     "movl     %esp, 0x00(%edi)\n\t"
     "movl     %ebx, 0x28(%edi)\n\t"
@@ -150,11 +155,10 @@ __asm__ (
 #elif KRAKEN_ARCH==KRAKEN_ARCH_AVR
 
 #endif
-    "ret                     \n\t"
 );
 
-static void kraken_guard () {
-    if (current_thread != &threads[0]) {
+static void kraken_guard (struct kraken_runtime* runtime) {
+    if (current_thread != &runtime->threads[0]) {
         current_thread->status = STOPPED;
         kraken_yield();
     }
