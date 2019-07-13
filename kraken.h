@@ -24,6 +24,7 @@
 #if KRAKEN_ARCH==KRAKEN_ARCH_X86
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
 #endif
+#define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
 #endif
 
 // architecture selection
@@ -84,15 +85,15 @@ struct kraken_runtime {
     struct kraken_thread *current_thread;
 };
 
-typedef void (*function_type)();
+typedef void (*function_type)(struct kraken_runtime*);
 
-void        kraken_initialize();
-void        kraken_run(int);
-int         kraken_start_thread();
+struct kraken_runtime* kraken_initialize_runtime();
+void        kraken_run(struct kraken_runtime*, int);
+int         kraken_start_thread(struct kraken_runtime*, function_type);
 static 
-void        kraken_guard();
-bool        kraken_yield();
-void        kraken_printt_state();
+void        kraken_guard(struct kraken_runtime* );
+bool        kraken_yield(struct kraken_runtime* );
+void        kraken_print_state(struct kraken_runtime*);
 void        kraken_switch (struct kraken_context*, struct kraken_context*);
 
 
@@ -106,8 +107,8 @@ void kraken_print_state (struct kraken_runtime* runtime) {
 #endif
 }
 
-void __attribute__((noreturn)) kraken_run (kraken_runtime* runtime, int return_code) {
-    while (kraken_yield()) ;
+void __attribute__((noreturn)) kraken_run (struct kraken_runtime* runtime, int return_code) {
+    while (kraken_yield(runtime)) ;
 
     // Free thread stack memory when done
     for (int i = 0; i < KRAKEN_MAX_THREADS; i++) {
@@ -119,10 +120,13 @@ void __attribute__((noreturn)) kraken_run (kraken_runtime* runtime, int return_c
     exit(return_code);
 }
 
-void kraken_initialize_runtime() {
-    current_thread = &threads[0];
-    current_thread->status = RUNNING;
-    current_thread->stack = (char*)malloc(KRAKEN_STACK_SIZE);
+struct kraken_runtime* kraken_initialize_runtime() {
+    struct kraken_runtime* runtime = (struct kraken_runtime*)malloc(sizeof(struct kraken_runtime));
+    runtime->current_thread = &runtime->threads[0];
+    runtime->current_thread->status = RUNNING;
+    runtime->current_thread->stack = (char*)malloc(KRAKEN_STACK_SIZE);
+
+    return runtime;
 }
 
 __asm__ (
@@ -158,59 +162,59 @@ __asm__ (
 );
 
 static void kraken_guard (struct kraken_runtime* runtime) {
-    if (current_thread != &runtime->threads[0]) {
-        current_thread->status = STOPPED;
-        kraken_yield();
+    if (runtime->current_thread != &runtime->threads[0]) {
+        runtime->current_thread->status = STOPPED;
+        kraken_yield(runtime);
     }
 }
 
-bool kraken_yield () {
+bool kraken_yield (struct kraken_runtime* runtime) {
     struct kraken_thread *other_thread;
     struct kraken_context *old_ctx, *new_ctx;
 
 #if KRAKEN_SCHEDULER==KRAKEN_SCHEDULER_ROUND_ROBIN
-    other_thread = current_thread;
+    other_thread = runtime->current_thread;
 
     while (other_thread->status != READY) {
         // if the current thread is the last thread
         struct kraken_thread *next = ++other_thread;
-        struct kraken_thread *after_last = &threads[KRAKEN_MAX_THREADS];
+        struct kraken_thread *after_last = &runtime->threads[KRAKEN_MAX_THREADS];
         if (next == after_last) {
             // set the current thread to the first thread
-            other_thread = &threads[0];
+            other_thread = &runtime->threads[0];
         }
-        if (other_thread == current_thread) {
+        if (other_thread == runtime->current_thread) {
             return false;
         }
     }
 #endif
 
-    if (current_thread->status != STOPPED) {
-        current_thread->status = READY;
+    if (runtime->current_thread->status != STOPPED) {
+        runtime->current_thread->status = READY;
     }
 
     other_thread->status = RUNNING;
-    old_ctx = &current_thread->context;
+    old_ctx = &runtime->current_thread->context;
     new_ctx = &other_thread->context;
-    current_thread = other_thread;
+    runtime->current_thread = other_thread;
 
-    kraken_print_state();
+    kraken_print_state(runtime);
 
     // switch from old context to new context
     kraken_switch(old_ctx, new_ctx);
 
     //printf("returned from yield\n");
-    return true;
+    return true;  
 }
 
 
-int kraken_start_thread (function_type func) {
+int kraken_start_thread (struct kraken_runtime* runtime, function_type func) {
     struct kraken_thread* new_thread;
 
 #if KRAKEN_SCHEDULER==KRAKEN_SCHEDULER_ROUND_ROBIN
     // look for a home for the new thread;
-    for (new_thread = &threads[0]; true ;new_thread++) {
-        if (new_thread == &threads[KRAKEN_MAX_THREADS]) {
+    for (new_thread = &runtime->threads[0]; true ;new_thread++) {
+        if (new_thread == &runtime->threads[KRAKEN_MAX_THREADS]) {
             return -1;
         } else if (new_thread->status == STOPPED) {
             break;
