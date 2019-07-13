@@ -79,10 +79,8 @@ struct kraken_thread {
     char* stack;
 };
 
-struct kraken_runtime {
-    struct kraken_thread threads[KRAKEN_MAX_THREADS];
-    struct kraken_thread *current_thread;
-};
+struct kraken_thread threads[KRAKEN_MAX_THREADS];
+struct kraken_thread *current_thread;
 
 typedef void (*function_type)();
 
@@ -96,23 +94,23 @@ void        kraken_printt_state();
 void        kraken_switch (struct kraken_context*, struct kraken_context*);
 
 
-void kraken_print_state (struct kraken_runtime* runtime) {
+void kraken_print_state () {
 #ifdef KRAKEN_DEBUG
-    printf("Thread table address %p\n", runtime->threads);
+    printf("Thread table address %p\n", threads);
     for (int i = 0; i < KRAKEN_MAX_THREADS; i++) {
-        printf("\tThread %d stack memory at %p\n", i, (uint64_t*)&runtime->threads[i]);
-        printf("\tThread %d stack starts at %p\n", i, (uint64_t*)runtime->threads[i].context.rsp);
+        printf("\tThread %d stack memory at %p\n", i, (uint64_t*)&threads[i]);
+        printf("\tThread %d stack starts at %p\n", i, (uint64_t*)threads[i].context.rsp);
     }
 #endif
 }
 
-void __attribute__((noreturn)) kraken_run (kraken_runtime* runtime, int return_code) {
+void __attribute__((noreturn)) kraken_run (int return_code) {
     while (kraken_yield()) ;
 
     // Free thread stack memory when done
     for (int i = 0; i < KRAKEN_MAX_THREADS; i++) {
-        if (&runtime->threads[i] != NULL) {
-            free(runtime->threads[i].stack);
+        if (&threads[i] != NULL) {
+            free(threads[i].stack);
         }
     }
 
