@@ -24,6 +24,7 @@
 #if KRAKEN_ARCH==KRAKEN_ARCH_X86
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
 #endif
+#define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
 #endif
 
 // architecture selection
@@ -155,8 +156,8 @@ __asm__ (
 #endif
 );
 
-static void kraken_guard (struct kraken_runtime* runtime) {
-    if (current_thread != &runtime->threads[0]) {
+static void kraken_guard () {
+    if (current_thread != &threads[0]) {
         current_thread->status = STOPPED;
         kraken_yield();
     }
