@@ -9,7 +9,7 @@ void thread_function (struct kraken_runtime* runtime) {
     static int x = 0;
     int id = ++x;
     for (int i = 0; i < 10; i++) {
-        kraken_print_state(runtime, false);
+        kraken_print_state(runtime, true);
         
         printf("Before yield\n");
         printf("Hi from thread %d\n", id);

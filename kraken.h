@@ -8,7 +8,7 @@
 #define KRAKEN_SCHEDULER_FIFO           0x02
 #define KRAKEN_SCHEDULER_FAIR           0x04
 
-// Architecture codes 
+// Architecture codes
 #define KRAKEN_ARCH_AVR                 0x11
 #define KRAKEN_ARCH_X86_64              0x12
 #define KRAKEN_ARCH_X86                 0x13
@@ -16,15 +16,16 @@
 
 // Maximum number of threads
 #if !defined(KRAKEN_MAX_THREADS)
-#define KRAKEN_MAX_THREADS              4
+#define KRAKEN_MAX_THREADS              0x04
 #endif
 
 // Maxium stack size
 #if !defined( KRAKEN_STACK_SIZE )
 #if KRAKEN_ARCH==KRAKEN_ARCH_X86
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
-#endif
+#else
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
+#endif
 #endif
 
 // architecture selection
@@ -90,13 +91,12 @@ struct kraken_runtime {
 typedef void (*function_type)(struct kraken_runtime*);
 
 struct kraken_runtime* kraken_initialize_runtime();
-void        kraken_run(struct kraken_runtime*, int);
-int         kraken_start_thread(struct kraken_runtime*, function_type);
-static 
-void        kraken_guard(struct kraken_runtime* );
-bool        kraken_yield(struct kraken_runtime* );
-void        kraken_print_state(struct kraken_runtime*, bool);
-void        kraken_switch (struct kraken_context*, struct kraken_context*);
+void kraken_run(struct kraken_runtime*, int);
+int  kraken_start_thread(struct kraken_runtime*, function_type);
+static void kraken_guard(struct kraken_runtime* );
+bool kraken_yield(struct kraken_runtime* );
+void kraken_print_state(struct kraken_runtime*, bool);
+void kraken_switch (struct kraken_context*, struct kraken_context*);
 
 
 static void kraken_print_thread_state(struct kraken_thread* current_thread) {
@@ -219,11 +219,11 @@ bool kraken_yield (struct kraken_runtime* runtime) {
     
     while (other_thread->status != READY) {
         // if the current thread is the last thread
-        struct kraken_thread *next = ++other_thread;
+        struct kraken_thread *next = other_thread++;
         struct kraken_thread *after_last = &runtime->threads[KRAKEN_MAX_THREADS];
         if (next == after_last) {
             // set the current thread to the first thread
-            other_thread = &runtime->threads[0];
+            other_thread = &(runtime->threads[0]);
         }
 
         if (other_thread == runtime->current_thread) {
@@ -254,7 +254,6 @@ bool kraken_yield (struct kraken_runtime* runtime) {
 int kraken_start_thread (struct kraken_runtime* runtime, function_type thread_func) {
     struct kraken_thread* new_thread;
 
-#if KRAKEN_SCHEDULER==KRAKEN_SCHEDULER_ROUND_ROBIN
     // look for a home for the new thread;
     for (new_thread = &runtime->threads[0]; true ;new_thread++) {
         if (new_thread == &runtime->threads[KRAKEN_MAX_THREADS]) {
@@ -263,7 +262,6 @@ int kraken_start_thread (struct kraken_runtime* runtime, function_type thread_fu
             break;
         }
     }
-#endif
 
     new_thread->stack = (char*)malloc(KRAKEN_STACK_SIZE);
     
