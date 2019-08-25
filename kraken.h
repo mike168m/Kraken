@@ -91,11 +91,17 @@ struct kraken_runtime {
 typedef void (*function_type)(struct kraken_runtime*);
 
 struct kraken_runtime* kraken_initialize_runtime();
+
 void kraken_run(struct kraken_runtime*, int);
+
 int  kraken_start_thread(struct kraken_runtime*, function_type);
+
 static void kraken_guard(struct kraken_runtime* );
+
 bool kraken_yield(struct kraken_runtime* );
+
 void kraken_print_state(struct kraken_runtime*, bool);
+
 void kraken_switch (struct kraken_context*, struct kraken_context*);
 
 
