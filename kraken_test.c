@@ -5,22 +5,31 @@
 #include "kraken.h"
 #include <stdio.h>
 
-void thread_1 () {
+void thread_function (struct kraken_runtime* runtime) {
     static int x = 0;
     int id = ++x;
     for (int i = 0; i < 10; i++) {
+        kraken_print_state(runtime, true);
+        
+        printf("Before yield\n");
         printf("Hi from thread %d\n", id);
-        kraken_yield();
+
+        kraken_yield(runtime);
+
+        printf("After yield\n");
     }
 }
 
 int main (void) {
-    kraken_initialize_runtime();
+    struct kraken_runtime* runtime = kraken_initialize_runtime();
 
-    for (int i = 0; i < KRAKEN_MAX_THREADS; i++) {
-        if (kraken_start_thread(thread_1) < 0) 
-            printf("Couldn't start thread %d\n", i);
-    }
+    if (kraken_start_thread(runtime, thread_function) < 0)
+        printf("Couldn't start thread.\n");
+    if (kraken_start_thread(runtime, thread_function) < 0)
+        printf("Couldn't start thread.\n");
 
-    kraken_run(0);
+    kraken_run(runtime, 0);
 }
+
+
+
