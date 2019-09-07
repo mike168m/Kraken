@@ -28,6 +28,7 @@
 // use 2mb stacks for 64bit architectures
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2
 #endif
+#define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
 #endif
 
 // architecture selection
@@ -85,10 +86,8 @@ struct kraken_thread {
     uint16_t id;
 };
 
-struct kraken_runtime {
-    struct kraken_thread threads[KRAKEN_MAX_THREADS];
-    struct kraken_thread *current_thread;
-};
+struct kraken_thread threads[KRAKEN_MAX_THREADS];
+struct kraken_thread *current_thread;
 
 typedef void (*function_type)(struct kraken_runtime*);
 
