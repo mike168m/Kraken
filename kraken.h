@@ -22,9 +22,11 @@
 // Maxium stack size
 #if !defined( KRAKEN_STACK_SIZE )
 #if KRAKEN_ARCH==KRAKEN_ARCH_X86
-#define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
+// use 2mb stacks for 64bit architectures
+#define KRAKEN_STACK_SIZE               1024 * 1024 * 2
 #else
-#define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
+// use 2mb stacks for 64bit architectures
+#define KRAKEN_STACK_SIZE               1024 * 1024 * 2
 #endif
 #endif
 
@@ -102,7 +104,7 @@ bool kraken_yield(struct kraken_runtime* );
 
 void kraken_print_state(struct kraken_runtime*, bool);
 
-void kraken_switch (struct kraken_context*, struct kraken_context*);
+static void kraken_switch (struct kraken_context*, struct kraken_context*);
 
 
 static void kraken_print_thread_state(struct kraken_thread* current_thread) {
@@ -136,7 +138,12 @@ static void kraken_print_thread_state(struct kraken_thread* current_thread) {
 }
 
 
-void kraken_print_state (struct kraken_runtime* runtime, bool onlyCurrent) {
+void kraken_print_state
+(
+    struct kraken_runtime* runtime,
+    bool onlyCurrent
+) 
+{
 #ifdef KRAKEN_DEBUG
     assert(runtime->current_thread != NULL);
 
@@ -150,7 +157,13 @@ void kraken_print_state (struct kraken_runtime* runtime, bool onlyCurrent) {
 #endif
 }
 
-void __attribute__((noreturn)) kraken_run (struct kraken_runtime* runtime, int return_code) {
+void __attribute__((noreturn)) kraken_run
+(
+    struct kraken_runtime*    runtime,
+    int                       return_code
+)
+{
+
     while (kraken_yield(runtime)) ;
 
     // Free thread stack memory when done
@@ -164,7 +177,8 @@ void __attribute__((noreturn)) kraken_run (struct kraken_runtime* runtime, int r
 }
 
 struct kraken_runtime* kraken_initialize_runtime() {
-    struct kraken_runtime* runtime = (struct kraken_runtime*)malloc(sizeof(struct kraken_runtime));
+    struct kraken_runtime* runtime = (struct kraken_runtime*)
+                                    malloc(sizeof(struct kraken_runtime));
     bzero((void*)runtime, sizeof(struct kraken_runtime));
     runtime->current_thread = &runtime->threads[0];
     runtime->current_thread->status = RUNNING;
@@ -246,6 +260,7 @@ bool kraken_yield (struct kraken_runtime* runtime) {
 
     old_ctx = &runtime->current_thread->context;
     new_ctx = &other_thread->context;
+    
     runtime->current_thread = other_thread;
 
     //kraken_print_state(runtime);
@@ -253,11 +268,16 @@ bool kraken_yield (struct kraken_runtime* runtime) {
     // switch from old context to new context
     kraken_switch(old_ctx, new_ctx);
 
-    return true;  
+    return true;
 }
 
 
-int kraken_start_thread (struct kraken_runtime* runtime, function_type thread_func) {
+int kraken_start_thread 
+(
+    struct kraken_runtime* runtime,
+    function_type thread_func
+)
+{
     struct kraken_thread* new_thread;
 
     // look for a home for the new thread;
@@ -270,17 +290,23 @@ int kraken_start_thread (struct kraken_runtime* runtime, function_type thread_fu
     }
 
     new_thread->stack = (char*)malloc(KRAKEN_STACK_SIZE);
-    
-    if (!new_thread->stack) return -1;
+
+    if (new_thread->stack == NULL) return -1;
 
 #if KRAKEN_ARCH==KRAKEN_ARCH_X86_64
-    *(uint64_t *)&(new_thread->stack[KRAKEN_STACK_SIZE -  8]) = (uint64_t)kraken_guard;
-    *(uint64_t *)&(new_thread->stack[KRAKEN_STACK_SIZE - 16]) = (uint64_t)thread_func;
-    new_thread->context.rsp = (uint64_t)&(new_thread->stack[KRAKEN_STACK_SIZE - 16]);
+    *(uint64_t *)&(new_thread->stack[KRAKEN_STACK_SIZE -  8])
+        = (uint64_t)kraken_guard;
+    *(uint64_t *)&(new_thread->stack[KRAKEN_STACK_SIZE - 16])
+        = (uint64_t)thread_func;
+    new_thread->context.rsp
+        = (uint64_t)&(new_thread->stack[KRAKEN_STACK_SIZE - 16]);
 #elif KRAKEN_ARCH==KRAKEN_ARCH_X86
-    *(uint32_t *)&(new_thread->stack[KRAKEN_STACK_SIZE -  4]) = (uint32_t)kraken_guard;
-    *(uint32_t *)&(new_thread->stack[KRAKEN_STACK_SIZE -  8]) = (uint32_t)thread_func;
-    new_thread->context.esp = (uint32_t)&(new_thread->stack[KRAKEN_STACK_SIZE - 8]);
+    *(uint32_t *)&(new_thread->stack[KRAKEN_STACK_SIZE -  4])
+        = (uint32_t)kraken_guard;
+    *(uint32_t *)&(new_thread->stack[KRAKEN_STACK_SIZE -  8])
+        = (uint32_t)thread_func;
+    new_thread->context.esp 
+        = (uint32_t)&(new_thread->stack[KRAKEN_STACK_SIZE - 8]);
 #endif
 
     new_thread->status = READY;
