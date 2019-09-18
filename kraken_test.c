@@ -2,31 +2,28 @@
 #define KRAKEN_MAX_THREADS  0x04
 #define KRAKEN_DEBUG
 
+
 #include "kraken.h"
 #include <stdio.h>
 
-void thread_function (struct kraken_runtime* runtime) {
-    static int x = 0;
-    int id = ++x;
-    for (int i = 0; i < 10; i++) {
-        kraken_print_state(runtime, true);
-        
-        printf("Before yield\n");
-        printf("Hi from thread %d\n", id);
 
-        kraken_yield(runtime);
+__attribute__((regparm(1), noinline))
+void t1 (struct kraken_runtime* runtime)
+{
+    //kraken_print_state(runtime, true);
 
-        printf("After yield\n");
-    }
+    kraken_yield(runtime); 
 }
 
-int main (void) {
+
+int main (void)
+{
     struct kraken_runtime* runtime = kraken_initialize_runtime();
 
-    if (kraken_start_thread(runtime, thread_function) < 0)
+    if ( 0 > kraken_start_thread(runtime, t1))
+    {
         printf("Couldn't start thread.\n");
-    if (kraken_start_thread(runtime, thread_function) < 0)
-        printf("Couldn't start thread.\n");
+    }
 
     kraken_run(runtime, 0);
 }
