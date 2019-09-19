@@ -28,6 +28,7 @@
 // use 2mb stacks for 64bit architectures
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2
 #endif
+#define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
 #endif
 
 // architecture selection
