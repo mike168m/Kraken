@@ -327,7 +327,7 @@ bool kraken_yield
     while ( previous_thread->status != READY )
     {
         // if the current thread is the last thread
-        struct kraken_thread *next_thread = other_thread++;
+        struct kraken_thread *next_thread = previous_thread++;
 
         struct kraken_thread *invalid_thread = &runtime->threads[ KRAKEN_MAX_THREADS ];
 
