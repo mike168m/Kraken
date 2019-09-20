@@ -47,7 +47,6 @@
 #include <stdio.h>
 #endif
 
-
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
@@ -210,7 +209,7 @@ void __attribute__( ( noreturn ) ) kraken_run
         kraken_yield( runtime );
     }
 
-    while ( kraken_yield( runtime ) ) ;
+    while ( kraken_yield( runtime ) );
 
     // Free thread stack memory when done
     for ( uint16_t thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
@@ -241,7 +240,7 @@ struct kraken_runtime* kraken_initialize_runtime
 
     for ( uint16_t thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
     {
-        runtime->threads[thread_idx].id = thread_idx;
+        runtime->threads[ thread_idx ].id = thread_idx;
     }
 
     return runtime;
@@ -265,7 +264,9 @@ __asm__ (
 #if KRAKEN_ARCH==KRAKEN_ARCH_X86_64
     // Swap contexts
     //"call check_current_thread_ptr       \n\t"
-    //"int    $3                           \n\t"
+#ifdef KRAKEN_DEBUG // interrupt gdb if build type is debug.
+    "int    $3                           \n\t"
+#endif
     "movq   %rsp, 0x00(%rdi)             \n\t"
     "movq   %r15, 0x08(%rdi)             \n\t"
     "movq   %r14, 0x10(%rdi)             \n\t"
@@ -318,25 +319,25 @@ bool kraken_yield
 {
     struct kraken_context *old_ctx          =       NULL;
     struct kraken_context *new_ctx          =       NULL;
-    struct kraken_thread  *other_thread     =       NULL;
+    struct kraken_thread  *previous_thread     =       NULL;
 
 #if KRAKEN_SCHEDULER==KRAKEN_SCHEDULER_ROUND_ROBIN
-    other_thread = runtime->current_thread;
+    previous_thread = runtime->current_thread;
 
-    while ( other_thread->status != READY )
+    while ( previous_thread->status != READY )
     {
         // if the current thread is the last thread
-        struct kraken_thread *next = other_thread++;
+        struct kraken_thread *next_thread = other_thread++;
 
-        struct kraken_thread *after_last = &runtime->threads[ KRAKEN_MAX_THREADS ];
+        struct kraken_thread *invalid_thread = &runtime->threads[ KRAKEN_MAX_THREADS ];
 
-        if ( next == after_last )
+        if ( next_thread == invalid_thread )
         {
             // set the current thread to the first thread
-            other_thread = &( runtime->threads[ 0 ] );
+            previous_thread = &( runtime->threads[ 0 ] );
         }
 
-        if ( other_thread == runtime->current_thread )
+        if ( previous_thread == runtime->current_thread )
         {
             return false;
         }
@@ -347,13 +348,13 @@ bool kraken_yield
         runtime->current_thread->status = READY;
     }
 
-    other_thread->status = RUNNING;
+    previous_thread->status = RUNNING;
 #endif
 
     old_ctx = &runtime->current_thread->context;
-    new_ctx = &other_thread->context;
+    new_ctx = &previous_thread->context;
 
-    runtime->current_thread = other_thread;
+    runtime->current_thread = previous_thread;
 
     // switch from old context to new context
     assert( runtime->current_thread != NULL );

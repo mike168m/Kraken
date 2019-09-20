@@ -11,16 +11,22 @@ __attribute__((regparm(1), noinline))
 void t1 (struct kraken_runtime* runtime)
 {
     //kraken_print_state(runtime, true);
-    printf("Yielding to thread 2\n");
-    kraken_yield(runtime); 
+    static int i = 0;
+    for (; i < 20; i++) {
+        printf("Yielding to thread 2\n");
+        kraken_yield(runtime); 
+    }
 }
 
 __attribute__((regparm(1), noinline))
 void t2 (struct kraken_runtime* runtime)
 {
     //kraken_print_state(runtime, true);
-    printf("Yielding to runtime\n");
-    kraken_yield(runtime); 
+    static int i = 0; 
+    for (; i < 20; i++) {
+        printf("Yielding to thread 1 or runtime.\n");
+        kraken_yield(runtime); 
+    }
 }
 
 
