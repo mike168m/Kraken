@@ -28,7 +28,8 @@
 // use 2mb stacks for 64bit architectures
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2
 #endif
-#define KRAKEN_STACK_SIZE               1024 * 1024 * 2  // use 2mb stacks for 64bit architectures
+// use 2mb stacks for 64bit architectures
+#define KRAKEN_STACK_SIZE               1024 * 1024 * 2 
 #endif
 
 // architecture selection
@@ -108,6 +109,17 @@ typedef void (*function_type)( struct kraken_runtime* );
 struct kraken_runtime* kraken_initialize_runtime( void );
 
 
+#define KRAKEN_THREAD_FUNCTION(name, code)\
+__attribute__( ( regparm( 1 ), noinline ) ) void name ( struct kraken_runtime* runtime )\
+{\
+    __asm__\
+    (\
+    "movq   %rax, -8(%rbp)  \n\t"\
+    );\
+    code\
+}\
+
+
 void kraken_run (
     struct kraken_runtime*,
     int
@@ -118,6 +130,7 @@ int kraken_start_thread (
     struct kraken_runtime*,
     function_type
 );
+
 
 static void kraken_guard (
     struct kraken_runtime*
@@ -156,6 +169,7 @@ static void kraken_print_thread_state
             \tr12: %d\n\
             \trbx: %d\n\
             \trbp: %p\n\
+            status addr %p\n\
             status addr %p\n\
             \tstatus %d\n\
             stack addr %p\n\n",
@@ -236,7 +250,10 @@ struct kraken_runtime* kraken_initialize_runtime
 
     runtime->current_thread = &runtime->threads[ 0 ];
     runtime->current_thread->status = RUNNING;
-    runtime->current_thread->stack = ( char* )malloc( KRAKEN_STACK_SIZE );
+    runtime->current_thread->stack = ( char* )malloc( sizeof( char ) * KRAKEN_STACK_SIZE );
+
+    const char* const thread_stack = runtime->current_thread->stack;
+    assert( ( thread_stack == NULL, "KRAKEN: Can't allocate memory for thread stack." ) );
 
     for ( uint16_t thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
     {
@@ -257,15 +274,16 @@ void check_current_thread_ptr
 }
 
 
-__asm__ (
+__asm__
+(
     ".globl _kraken_switch, kraken_switch\n\t"
     "_kraken_switch:                     \n\t"
     "kraken_switch:                      \n\t"
 #if KRAKEN_ARCH==KRAKEN_ARCH_X86_64
     // Swap contexts
-    //"call check_current_thread_ptr       \n\t"
+    //"call check_current_thread_ptr      \n\t"
 #ifdef KRAKEN_DEBUG // interrupt gdb if build type is debug.
-    "int    $3                           \n\t"
+    //"int    $3                           \n\t"
 #endif
     "movq   %rsp, 0x00(%rdi)             \n\t"
     "movq   %r15, 0x08(%rdi)             \n\t"
@@ -282,7 +300,7 @@ __asm__ (
     "movq   0x28(%rsi), %rbx             \n\t"
     "movq   0x30(%rsi), %rbp             \n\t"
     "movq   %rdx,       %rax             \n\t"
-    // jump to thread function
+    // jump to thread's function
     "ret                                 \n\t"
 #elif KRAKEN_ARCH==KRAKEN_ARCH_X86
     "movl   %esp, 0x00(%edi)             \n\t"
@@ -302,6 +320,11 @@ static void kraken_guard
     struct kraken_runtime*  runtime
 )
 {
+    __asm__
+    (
+    "movq   %rax, -8(%rbp)  \n\t"
+    );
+    
     assert( runtime->current_thread != NULL );
 
     if ( runtime->current_thread != &runtime->threads[ 0 ] )
@@ -317,8 +340,8 @@ bool kraken_yield
     struct kraken_runtime*  runtime
 )
 {
-    struct kraken_context *old_ctx          =       NULL;
-    struct kraken_context *new_ctx          =       NULL;
+    struct kraken_context *old_ctx             =       NULL;
+    struct kraken_context *new_ctx             =       NULL;
     struct kraken_thread  *previous_thread     =       NULL;
 
 #if KRAKEN_SCHEDULER==KRAKEN_SCHEDULER_ROUND_ROBIN
@@ -347,7 +370,7 @@ bool kraken_yield
     {
         runtime->current_thread->status = READY;
     }
-
+    
     previous_thread->status = RUNNING;
 #endif
 
@@ -365,7 +388,8 @@ bool kraken_yield
 } // kraken_yield
 
 
-int kraken_start_thread (
+int kraken_start_thread
+(
     struct kraken_runtime*  runtime,
     function_type           thread_func
 )
@@ -387,13 +411,16 @@ int kraken_start_thread (
 
     new_thread->stack = ( char* )malloc( KRAKEN_STACK_SIZE );
 
+    const char* const thread_stack = new_thread->stack;
+    assert( ( thread_stack == NULL, "KRAKEN: Can't allocate memory for thread stack." ) );
+
     if ( new_thread->stack == NULL )
     {
         return -1;
     }
 
 #if KRAKEN_ARCH == KRAKEN_ARCH_X86_64
-    *( uint64_t*)&( new_thread->stack[ KRAKEN_STACK_SIZE -  8 ] ) = ( uint64_t )kraken_guard;
+    *( uint64_t* )&( new_thread->stack[ KRAKEN_STACK_SIZE -  8 ] ) = ( uint64_t )kraken_guard;
 
     *( uint64_t* )&( new_thread->stack[ KRAKEN_STACK_SIZE - 16 ] ) = ( uint64_t )thread_func;
 

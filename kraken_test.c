@@ -7,32 +7,37 @@
 #include <stdio.h>
 
 
-__attribute__((regparm(1), noinline))
-void t1 (struct kraken_runtime* runtime)
+KRAKEN_THREAD_FUNCTION( t1,
 {
-    //kraken_print_state(runtime, true);
     static int i = 0;
-    for (; i < 20; i++) {
+    printf("Yielding to thread 2\n");
+    for (; i < 10; i++) 
+    {
         printf("Yielding to thread 2\n");
         kraken_yield(runtime); 
     }
-}
+})
 
-__attribute__((regparm(1), noinline))
-void t2 (struct kraken_runtime* runtime)
+
+
+KRAKEN_THREAD_FUNCTION( t2,
 {
     //kraken_print_state(runtime, true);
     static int i = 0; 
-    for (; i < 20; i++) {
-        printf("Yielding to thread 1 or runtime.\n");
+    printf("Yielding to thread 1 or runtime.\n");
+    for (; i < 10; i++) 
+    {
+  printf("Yielding to thread 1 or runtime.\n");
+   
         kraken_yield(runtime); 
     }
-}
+})
 
 
 int main (void)
 {
-    struct kraken_runtime* runtime = kraken_initialize_runtime();
+    struct kraken_runtime* runtime =
+        kraken_initialize_runtime();
 
     if ( 0 > kraken_start_thread(runtime, t1))
     {
