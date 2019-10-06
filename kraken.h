@@ -44,10 +44,10 @@
 #endif
 
 
-#define KRAKEN_SCHEDULE_THREAD(runtime, function_name)\
+#define KRAKEN_SCHEDULE_THREAD( runtime, function_name )\
 {\
-    int success = kraken_start_thread(runtime, function_name);\
-    assert(-1 < success);\
+    int success = kraken_start_thread( runtime, function_name );\
+    assert( -1 < success );\
 }\
 
 
@@ -344,6 +344,8 @@ static void kraken_guard
         runtime->current_thread->status = STOPPED;
         kraken_yield( runtime );
     }
+
+    while ( kraken_yield( runtime ) ) ;
 } // kraken_guard
 
 
@@ -424,9 +426,9 @@ int kraken_start_thread
     new_thread->stack = ( char* )malloc( KRAKEN_STACK_SIZE );
 
     const char* const thread_stack = new_thread->stack;
-    assert( ( thread_stack == NULL, "KRAKEN: Can't allocate memory for thread stack." ) );
+    assert( ( NULL == thread_stack, "KRAKEN: Can't allocate memory for thread stack." ) );
 
-    if ( new_thread->stack == NULL )
+    if ( NULL == new_thread->stack )
     {
         return -1;
     }
