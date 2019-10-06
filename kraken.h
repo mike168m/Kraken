@@ -43,6 +43,14 @@
 #endif
 #endif
 
+
+#define KRAKEN_SCHEDULE_THREAD(runtime, function_name)\
+{\
+    int success = kraken_start_thread(runtime, function_name);\
+    assert(-1 < success);\
+}\
+
+
 // debug settings
 #ifdef KRAKEN_DEBUG
 #include <stdio.h>
@@ -110,7 +118,8 @@ struct kraken_runtime* kraken_initialize_runtime( void );
 
 
 #define KRAKEN_THREAD_FUNCTION(name, code)\
-__attribute__( ( regparm( 1 ), noinline ) ) void name ( struct kraken_runtime* runtime )\
+/*__attribute__( ( regparm( 1 ), noinline ) )*/\
+void name ( struct kraken_runtime* runtime )\
 {\
     __asm__\
     (\
@@ -320,12 +329,15 @@ static void kraken_guard
     struct kraken_runtime*  runtime
 )
 {
+    // Mov runtime pointer into rax register just to ensure we have a backup copy.
+    // Helpful for debugging.
     __asm__
     (
-    "movq   %rax, -8(%rbp)  \n\t"
+    "movq   %rdi, %rax                   \n\t"
+    "movq   %rax, -0x8(%rbp)             \n\t"
     );
     
-    assert( runtime->current_thread != NULL );
+    assert( NULL != runtime );
 
     if ( runtime->current_thread != &runtime->threads[ 0 ] )
     {
