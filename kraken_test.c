@@ -20,7 +20,6 @@ KRAKEN_THREAD_FUNCTION( t1,
 
 KRAKEN_THREAD_FUNCTION( t2,
 {
-    //kraken_print_state(runtime, true);
     static int i = 0; 
     for (; i < 10; i++) 
     {
@@ -32,7 +31,6 @@ KRAKEN_THREAD_FUNCTION( t2,
 
 KRAKEN_THREAD_FUNCTION( t3,
 {
-    //kraken_print_state(runtime, true);
     static int i = 0; 
     for (; i < 10; i++) 
     {
