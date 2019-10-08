@@ -10,48 +10,49 @@
 KRAKEN_THREAD_FUNCTION( t1,
 {
     static int i = 0;
-    for (; i < 10; i++) 
+    for ( ; i < 10; i++ ) 
     {
-        printf("In thread 1.\n");
-        kraken_yield(runtime); 
+        printf( "In thread 1.\n" );
+        kraken_yield( runtime ); 
     }
 })
 
 
 KRAKEN_THREAD_FUNCTION( t2,
 {
-    //kraken_print_state(runtime, true);
     static int i = 0; 
-    for (; i < 10; i++) 
+    for (; i < 10; i++ ) 
     {
-        printf("In thread 2.\n");
-        kraken_yield(runtime); 
+        printf( "In thread 2.\n" );
+        kraken_yield( runtime ); 
     }
 })
 
 
 KRAKEN_THREAD_FUNCTION( t3,
 {
-    //kraken_print_state(runtime, true);
     static int i = 0; 
-    for (; i < 10; i++) 
+    for (; i < 10; i++ ) 
     {
-        printf("In thread 3.\n");
-        kraken_yield(runtime); 
+        printf( "In thread 3.\n" );
+        kraken_yield( runtime ); 
     }
 })
 
 
-int main (void)
+int main
+(
+    void
+)
 {
     struct kraken_runtime* runtime =
         kraken_initialize_runtime();
 
-    KRAKEN_SCHEDULE_THREAD(runtime, t1);
-    KRAKEN_SCHEDULE_THREAD(runtime, t2);
-    KRAKEN_SCHEDULE_THREAD(runtime, t3);
+    KRAKEN_SCHEDULE_THREAD( runtime, t1 );
+    KRAKEN_SCHEDULE_THREAD( runtime, t2 );
+    KRAKEN_SCHEDULE_THREAD( runtime, t3 );
 
-    kraken_run(runtime, 0);
+    kraken_run( runtime, 0 );
 }
 
 

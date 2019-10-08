@@ -273,16 +273,6 @@ struct kraken_runtime* kraken_initialize_runtime
 } // kraken_initialize_runtime
 
 
-void check_current_thread_ptr
-(
-    struct kraken_runtime*  runtime
-)
-{
-    //kraken_print_state(runtime, true);
-    //assert( NULL != runtime->current_thread );
-}
-
-
 __asm__
 (
     ".globl _kraken_switch, kraken_switch\n\t"
