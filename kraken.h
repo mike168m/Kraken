@@ -119,7 +119,10 @@ struct kraken_runtime* kraken_initialize_runtime( void );
 
 #define KRAKEN_THREAD_FUNCTION(name, code)\
 /*__attribute__( ( regparm( 1 ), noinline ) )*/\
-void name ( struct kraken_runtime* runtime )\
+void name\
+(\
+struct kraken_runtime* runtime\
+)\
 {\
     __asm__\
     (\
