@@ -7,3 +7,4 @@
 !Readme.md
 !analyze_core_dump.sh
 !.travis.yml
+!deps/googletest
