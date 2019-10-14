@@ -8,3 +8,4 @@
 !analyze_core_dump.sh
 !.travis.yml
 !deps/googletest
+!kraken_doc.html

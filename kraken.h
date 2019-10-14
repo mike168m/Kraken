@@ -1,3 +1,67 @@
+// Copyright 2019 Michael Osei
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//     http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+/// # Kraken
+/// ===
+/// Kraken is an opensource header only c library for writing multicore multithread programs using
+/// green threads on x86 (Linux, Windows & MacOSX), AVR amd ARM.
+/// ## Example
+///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~C
+/// #define KRAKEN_SCHEDULER    0x01
+/// #define KRAKEN_MAX_THREADS  0x04
+/// #include "kraken.h"
+///
+/// KRAKEN_THREAD_FUNCTION( first_thread,
+/// {
+///     static int var_1 = 0;
+///     while (TRUE) 
+///     {
+///         // do some work
+///         var_1 += 1;
+///         printf( "In thread 1. var_1 = %d.\n", var_1 );
+///         kraken_yield( runtime );
+///     }
+/// })
+///
+/// KRAKEN_THREAD_FUNCTION( second_thread,
+/// {
+///     static int var_2 = 0;
+///     while (TRUE)
+///     {
+///       // do some other work.
+///       var_2 += 2;
+///       printf( "In thread 2. var_2 = %d.\n", var_2 );
+///       kraken_yield( runtime );
+///     } 
+/// })
+///
+///
+/// int main ( void )
+/// {
+///     // Create a new single core kraken runtime.
+///     // A runtime is responsible creating and managing threads on a cpu core.
+///     struct kraken_runtime* my_runtime = kraken_initialize_runtime();
+///     // Use these predefined macros to schedule your threads to be run.
+///     KRAKEN_SCHEDULE_THREAD( my_runtime, first_thread );
+///     KRAKEN_SCHEDULE_THREAD( my_runtime, second_thread );
+///     // Next we start the runtime and specify a return value for main.
+///     kraken_run( runtime, 0 );
+/// }
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 #ifndef KRAKEN_H
 #define KRAKEN_H
 
