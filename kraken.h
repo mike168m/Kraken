@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
+/// <link rel="stylesheet" href="https://casual-effects.com/markdeep/latest/dark.css?">
 /// # Kraken
 /// ===
 /// Kraken is an opensource header only c library for writing multicore multithread programs using
@@ -20,14 +20,15 @@
 /// ## Example
 ///
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~C
-/// #define KRAKEN_SCHEDULER    0x01
-/// #define KRAKEN_MAX_THREADS  0x04
+/// #define  KRAKEN_SCHEDULER    0x01
+/// #define  KRAKEN_MAX_THREADS  0x04
 /// #include "kraken.h"
-///
+/// 
+/// // 1.a. Define a function that represents a thread.
 /// KRAKEN_THREAD_FUNCTION( first_thread,
 /// {
 ///     static int var_1 = 0;
-///     while (TRUE) 
+///     while ( TRUE ) 
 ///     {
 ///         // do some work
 ///         var_1 += 1;
@@ -36,10 +37,11 @@
 ///     }
 /// })
 ///
+/// // 1.b. Define a second function for a second thread to make things more interesting.
 /// KRAKEN_THREAD_FUNCTION( second_thread,
 /// {
 ///     static int var_2 = 0;
-///     while (TRUE)
+///     while ( TRUE )
 ///     {
 ///       // do some other work.
 ///       var_2 += 2;
@@ -48,16 +50,15 @@
 ///     } 
 /// })
 ///
-///
 /// int main ( void )
 /// {
-///     // Create a new single core kraken runtime.
+///     // 2. Create a new single core kraken runtime.
 ///     // A runtime is responsible creating and managing threads on a cpu core.
 ///     struct kraken_runtime* my_runtime = kraken_initialize_runtime();
-///     // Use these predefined macros to schedule your threads to be run.
+///     // 3. Use these predefined macros to schedule your threads to be run.
 ///     KRAKEN_SCHEDULE_THREAD( my_runtime, first_thread );
 ///     KRAKEN_SCHEDULE_THREAD( my_runtime, second_thread );
-///     // Next we start the runtime and specify a return value for main.
+///     // 4. Next we start the runtime and specify a return value for main.
 ///     kraken_run( runtime, 0 );
 /// }
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -185,7 +186,7 @@ struct kraken_runtime* kraken_initialize_runtime( void );
 /*__attribute__( ( regparm( 1 ), noinline ) )*/\
 void name\
 (\
-struct kraken_runtime* runtime\
+    struct kraken_runtime* runtime\
 )\
 {\
     __asm__\
