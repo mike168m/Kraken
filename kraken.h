@@ -63,15 +63,23 @@
 /// }
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+//==============================================================================
+//
+//                                  MACROS
+//
+//==============================================================================
 #ifndef KRAKEN_H
 #define KRAKEN_H
 
 #define KRAKEN_VERSION                  "0.9.1"
 
+
 // Scheduler implementation codes for preprocessor
 #define KRAKEN_SCHEDULER_ROUND_ROBIN    0x01
 #define KRAKEN_SCHEDULER_FIFO           0x02
 #define KRAKEN_SCHEDULER_FAIR           0x04
+
 
 // Architecture codes
 #define KRAKEN_ARCH_AVR                 0x11
@@ -79,10 +87,12 @@
 #define KRAKEN_ARCH_X86                 0x13
 #define KRAKEN_ARCH_ARM                 0x14
 
+
 // Maximum number of threads
 #if !defined(KRAKEN_MAX_THREADS)
 #define KRAKEN_MAX_THREADS              0x04
 #endif
+
 
 // Maxium stack size
 #if !defined( KRAKEN_STACK_SIZE )
@@ -96,6 +106,7 @@
 // use 2mb stacks for 64bit architectures
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2 
 #endif
+
 
 // architecture selection
 #ifndef KRAKEN_ARCH
@@ -116,10 +127,26 @@
 }\
 
 
+#define KRAKEN_THREAD_FUNCTION(name, code)\
+/*__attribute__( ( regparm( 1 ), noinline ) )*/\
+void name\
+(\
+struct kraken_runtime* runtime\
+)\
+{\
+    __asm__\
+    (\
+    "movq   %rax, -8(%rbp)  \n\t"\
+    );\
+    code\
+}\
+
+
 // debug settings
 #ifdef KRAKEN_DEBUG
 #include <stdio.h>
 #endif
+
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -179,9 +206,15 @@ struct kraken_runtime
 typedef void (*function_type)( struct kraken_runtime* );
 
 
+//==============================================================================
+//
+//                           FUNCTION PROTOTYPES
+//
+//==============================================================================
 struct kraken_runtime* kraken_initialize_runtime( void );
 
 
+<<<<<<< HEAD
 #define KRAKEN_THREAD_FUNCTION(name, code)\
 /*__attribute__( ( regparm( 1 ), noinline ) )*/\
 void name\
@@ -197,6 +230,8 @@ void name\
 }\
 
 
+=======
+>>>>>>> f929647ece5737a9ffafbf2dd730da61f7733326
 void kraken_run (
     struct kraken_runtime*,
     int
@@ -232,6 +267,11 @@ static void kraken_switch (
 );
 
 
+//==============================================================================
+//
+//                           FUNCTION IMPLEMENTATIONS
+//
+//==============================================================================
 static void kraken_print_thread_state
 (
     struct kraken_thread*  current_thread
