@@ -12,13 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// <link rel="stylesheet" href="https://casual-effects.com/markdeep/latest/dark.css?">
-/// # Kraken
-/// ===
-/// Kraken is an opensource header only c library for writing multicore multithread programs using
-/// green threads on x86 (Linux, Windows & MacOSX), AVR amd ARM.
+/// <link rel="stylesheet" href="./kraken_doc_style.css">
+/// # Kraken ![](https://img.shields.io/travis/mike168m/Kraken?label=x86&style=flat-square)  ![](https://img.shields.io/travis/mike168m/Kraken?label=arm&style=flat-square)
+/// Kraken is an opensource header only c library for writing multicore 
+/// multithread programs using green threads on x86 (Linux, Windows & MacOSX), AVR amd ARM.
+/// !!! WARNING: Implementation in progress
+///     Use at your own risk.
+/// ## Installation
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Bash
+/// wget -O [include_dir]/kraken.h https://git.io/Je4U2
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// ## Example
-///
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~C
 /// #define  KRAKEN_SCHEDULER    0x01
 /// #define  KRAKEN_MAX_THREADS  0x04
@@ -63,7 +67,10 @@
 /// }
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
+/// ## Background
+///
+///
+///
 //==============================================================================
 //
 //                                  MACROS
@@ -72,7 +79,10 @@
 #ifndef KRAKEN_H
 #define KRAKEN_H
 
+
+#ifndef KRAKEN_VERSION 
 #define KRAKEN_VERSION                  "0.9.1"
+#endif
 
 
 // Scheduler implementation codes for preprocessor
@@ -155,6 +165,11 @@ struct kraken_runtime* runtime\
 #include <strings.h>
 
 
+//========================================================
+//
+//               LOCAL STRUCTURES & ENUMS
+//
+//========================================================
 struct kraken_context
 {
 #if KRAKEN_ARCH == KRAKEN_ARCH_X86_64
@@ -213,25 +228,6 @@ typedef void (*function_type)( struct kraken_runtime* );
 //==============================================================================
 struct kraken_runtime* kraken_initialize_runtime( void );
 
-
-<<<<<<< HEAD
-#define KRAKEN_THREAD_FUNCTION(name, code)\
-/*__attribute__( ( regparm( 1 ), noinline ) )*/\
-void name\
-(\
-    struct kraken_runtime* runtime\
-)\
-{\
-    __asm__\
-    (\
-    "movq   %rax, -8(%rbp)  \n\t"\
-    );\
-    code\
-}\
-
-
-=======
->>>>>>> f929647ece5737a9ffafbf2dd730da61f7733326
 void kraken_run (
     struct kraken_runtime*,
     int

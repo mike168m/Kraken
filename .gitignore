@@ -9,3 +9,7 @@
 !.travis.yml
 !deps/googletest
 !kraken_doc.html
+!kraken_doc_style.css
+
+
+

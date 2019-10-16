@@ -1,13 +1,17 @@
 <meta charset='utf-8' emacsmode='-*- markdown -*-'>
 <link rel='stylesheet' href='https://casual-effects.com/markdeep/latest/apidoc.css?'>
 <style>.backtick, .tilde {overflow-x: auto;} .longTOC {overflow-x: hidden;}</style>
-<link rel="stylesheet" href="https://casual-effects.com/markdeep/latest/dark.css?">
-# Kraken
-===
-Kraken is an opensource header only c library for writing multicore multithread programs using
-green threads on x86 (Linux, Windows & MacOSX), AVR amd ARM.
+<link rel="stylesheet" href="./kraken_doc_style.css">
+# Kraken ![](https://img.shields.io/travis/mike168m/Kraken?label=x86&style=flat-square)  ![](https://img.shields.io/travis/mike168m/Kraken?label=arm&style=flat-square)
+Kraken is an opensource header only c library for writing multicore 
+multithread programs using green threads on x86 (Linux, Windows & MacOSX), AVR amd ARM.
+!!! WARNING: Implementation in progress
+    Use at your own risk.
+## Installation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Bash
+wget -O [include_dir]/kraken.h https://git.io/Je4U2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Example
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~C
 #define  KRAKEN_SCHEDULER    0x01
 #define  KRAKEN_MAX_THREADS  0x04
@@ -51,5 +55,9 @@ int main ( void )
     kraken_run( runtime, 0 );
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Background
+
+
+
 <script>markdeepOptions={tocStyle:'long'};</script>
 <!-- Markdeep: --><script src='https://casual-effects.com/markdeep/latest/markdeep.min.js?'></script>

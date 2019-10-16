@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap');
+
+body 
+{
+    margin: auto;
+    background: #222;
+    color: white;
+    font-family: 'Roboto Mono',  monospace;
+    text-shadow: 2px 2px black
+}
+
+
+.longTOC 
+{
+    overflow: auto !important;
+    color: white !important;
+    border: none !important;
+    left: 20em !important;
+}
+
+
+.longTOC > p > a 
+{
+    color: white !important ;
+    font-weight: 1000 !important ;
+
+}
+
+
+
+.longTOC  .tocHeader {
+    background:  #bc9ad2
+}
+
+.md h2, .md h1, .md .nonumberh2 
+{
+    color: white;
+}
+
+
+span.line 
+{
+    background: #444;
+    box-shadow: 5px 5px #000;
+}
+
+
+span.hljs-keyword
+{
+    color: orange;
+}
+
+
+span.hljs-comment
+{
+    color: #8ac9ff;
+}
+
+
+span.hljs-params, span.hljs-title, span.hljs-built_in
+{
+    color: #00ff89 !important;
+}
+
+
+code
+{
+    font-weight: 1000;
+}
+
+
+span.hljs-string, span.hljs-number
+{
+    color: #ff1a15;
+}
+
+
+.md code
+{ 
+    box-shadow: 5px 10px #333;
+}
+
+.md pre.listing
+{
+    background: #333;
+    border: 1px solid #bc9ad2;
+    border-radius: 0.25em;
+    box-shadow: 15px 20px #111;
+
+}
