@@ -228,9 +228,10 @@ typedef void (*function_type)( struct kraken_runtime* );
 //==============================================================================
 struct kraken_runtime* kraken_initialize_runtime( void );
 
+
 void kraken_run (
-    struct kraken_runtime*,
-    int
+    struct kraken_runtime*, // runtime
+    int                     // return_code
 );
 
 
@@ -268,6 +269,18 @@ static void kraken_switch (
 //                           FUNCTION IMPLEMENTATIONS
 //
 //==============================================================================
+
+
+/// ## Functions
+/// ### kraken_print_thread_state
+/// Prints the contents of a kraken_thread (see struct kraken_thread)
+/// ```C
+/// void kraken_print_thread_state ( struct kraken_thread* thread );
+/// ```
+/// Parameter | Description
+/// ----------|----------------------------------------------------------------
+/// thread    | A pointer to a thread whose state you want to print.
+/// Does not return.
 static void kraken_print_thread_state
 (
     struct kraken_thread*  current_thread
@@ -302,10 +315,20 @@ static void kraken_print_thread_state
 } // kraken_print_thread_state
 
 
+/// ### kraken_print_state
+/// Prints the contents of a kraken_runtime (see struct kraken_runtme)
+/// ```C
+/// void kraken_print_thread_state ( struct kraken_thread*  thread 
+///                                  bool                   only_current_thread );
+/// ```
+/// Parameter | Description
+/// ----------|----------------------------------------------------------------
+/// thread    | A pointer to a thread whose state you want to print.
+/// Does not return.
 void kraken_print_state
 (
     struct kraken_runtime*  runtime,
-    bool                    onlyCurrent
+    bool                    only_current
 )
 {
 #ifdef KRAKEN_DEBUG
@@ -313,7 +336,7 @@ void kraken_print_state
 
     kraken_print_thread_state( runtime->current_thread );
 
-    if ( onlyCurrent != true )
+    if ( only_current != true )
     {
         for ( uint thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
         {
@@ -324,6 +347,17 @@ void kraken_print_state
 } // kraken_print_state
 
 
+/// ### kraken_run
+/// Prints the contents of a kraken_runtime (see struct kraken_runtme)
+/// ```C
+/// void kraken_print_thread_state ( struct kraken_thread* runtime 
+///                                  int                   return_code );
+/// ```
+/// Parameter   | Description
+/// ------------|----------------------------------------------------------------
+/// runtime     | A pointer to `struct kraken_runtime`.
+/// return_code | Program exit code you want to return with
+/// Does not return.
 void __attribute__( ( noreturn ) ) kraken_run
 (
     struct kraken_runtime*  runtime,
@@ -351,6 +385,15 @@ void __attribute__( ( noreturn ) ) kraken_run
 } // kraken_run
 
 
+/// ### kraken_initialize_runtime
+/// Prints the contents of a kraken_runtime (see struct kraken_runtme)
+/// ```C
+/// void kraken_initialize_runtime ( void ) 
+/// ```
+/// Parameter   | Description
+/// ------------|----------------------------------------------------------------
+/// void /**/   | No parameters!!!
+/// > Returns a pointer to `struct kraken_runtime`
 struct kraken_runtime* kraken_initialize_runtime
 (
     void
@@ -483,13 +526,14 @@ bool kraken_yield
 #endif
 
     old_ctx = &runtime->current_thread->context;
+    
     new_ctx = &previous_thread->context;
 
     runtime->current_thread = previous_thread;
 
-    // switch from old context to new context
     assert( runtime->current_thread != NULL );
 
+    // switch from old context to new context
     kraken_switch( old_ctx, new_ctx, runtime );
 
     return true;
@@ -520,6 +564,7 @@ int kraken_start_thread
     new_thread->stack = ( char* )malloc( KRAKEN_STACK_SIZE );
 
     const char* const thread_stack = new_thread->stack;
+
     assert( ( NULL == thread_stack, "KRAKEN: Can't allocate memory for thread stack." ) );
 
     if ( NULL == new_thread->stack )

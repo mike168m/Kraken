@@ -15,7 +15,7 @@ body
     overflow: auto !important;
     color: white !important;
     border: none !important;
-    left: 20em !important;
+    left: 15em !important;
 }
 
 
@@ -32,7 +32,7 @@ body
     background:  #bc9ad2
 }
 
-.md h2, .md h1, .md .nonumberh2 
+.md h2, .md h1, .md h3, .md .nonumberh2 
 {
     color: white;
 }
@@ -80,11 +80,41 @@ span.hljs-string, span.hljs-number
     box-shadow: 5px 10px #333;
 }
 
+
 .md pre.listing
 {
     background: #333;
     border: 1px solid #bc9ad2;
     border-radius: 0.25em;
     box-shadow: 15px 20px #111;
-
 }
+
+
+.md pre.listing.backtick
+{
+    box-shadow: none;    
+    border: 1px solid #bc9ad2;
+    border-radius: 0;
+    border-bottom: 0;
+    margin: 0px;
+}
+
+
+p:empty { display: none; }
+
+.md table.table, .table, .md div.table 
+{
+    width: 100.45% !important;
+    margin: 0px;
+}
+
+
+.md table.table th, .md table.table tr, .md table.table td 
+{
+    background: #333;
+    color: white;
+    border: 1px solid #bc9ad2;
+}
+
+
+

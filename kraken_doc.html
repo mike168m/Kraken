@@ -59,5 +59,45 @@ int main ( void )
 
 
 
+## Functions
+### kraken_print_thread_state
+Prints the contents of a kraken_thread (see struct kraken_thread)
+```C
+void kraken_print_thread_state ( struct kraken_thread* thread );
+```
+Parameter | Description
+----------|----------------------------------------------------------------
+thread    | A pointer to a thread whose state you want to print.
+Does not return.
+### kraken_print_state
+Prints the contents of a kraken_runtime (see struct kraken_runtme)
+```C
+void kraken_print_thread_state ( struct kraken_thread*  thread 
+                                 bool                   only_current_thread );
+```
+Parameter | Description
+----------|----------------------------------------------------------------
+thread    | A pointer to a thread whose state you want to print.
+Does not return.
+### kraken_run
+Prints the contents of a kraken_runtime (see struct kraken_runtme)
+```C
+void kraken_print_thread_state ( struct kraken_thread* runtime 
+                                 int                   return_code );
+```
+Parameter   | Description
+------------|----------------------------------------------------------------
+runtime     | A pointer to `struct kraken_runtime`.
+return_code | Program exit code you want to return with
+Does not return.
+### kraken_initialize_runtime
+Prints the contents of a kraken_runtime (see struct kraken_runtme)
+```C
+void kraken_initialize_runtime ( void ) 
+```
+Parameter   | Description
+------------|----------------------------------------------------------------
+void /**/   | No parameters!!!
+> Returns a pointer to `struct kraken_runtime`
 <script>markdeepOptions={tocStyle:'long'};</script>
 <!-- Markdeep: --><script src='https://casual-effects.com/markdeep/latest/markdeep.min.js?'></script>
