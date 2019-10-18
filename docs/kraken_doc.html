@@ -9,7 +9,7 @@ multithread programs using green threads on x86 (Linux, Windows & MacOSX), AVR a
     Use at your own risk.
 ## Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Bash
-wget -O [include_dir]/kraken.h https://git.io/Je4U2
+wget -O [your_include_dir]/kraken.h https://git.io/Je4U2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~C
@@ -98,6 +98,17 @@ void kraken_initialize_runtime ( void )
 Parameter   | Description
 ------------|----------------------------------------------------------------
 void /**/   | No parameters!!!
+> Returns a pointer to `struct kraken_runtime`
+### kraken_switch
+Prints the contents of a kraken_runtime (see struct kraken_runtme)
+```C
+void kraken_initialize_runtime ( void ) 
+```
+Parameter   | Description
+------------|----------------------------------------------------------------
+old_ctx     | Old context
+new_ctx     | New context
+runtime     | Pointer to a runtime
 > Returns a pointer to `struct kraken_runtime`
 <script>markdeepOptions={tocStyle:'long'};</script>
 <!-- Markdeep: --><script src='https://casual-effects.com/markdeep/latest/markdeep.min.js?'></script>
