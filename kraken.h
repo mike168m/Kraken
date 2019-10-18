@@ -18,9 +18,10 @@
 /// multithread programs using green threads on x86 (Linux, Windows & MacOSX), AVR amd ARM.
 /// !!! WARNING: Implementation in progress
 ///     Use at your own risk.
+//
 /// ## Installation
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Bash
-/// wget -O [include_dir]/kraken.h https://git.io/Je4U2
+/// wget -O [your_include_dir]/kraken.h https://git.io/Je4U2
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// ## Example
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~C
@@ -82,7 +83,7 @@
 
 #ifndef KRAKEN_VERSION 
 #define KRAKEN_VERSION                  "0.9.1"
-#endif
+#endif // KRAKEN_VERSION
 
 
 // Scheduler implementation codes for preprocessor
@@ -101,21 +102,26 @@
 // Maximum number of threads
 #if !defined(KRAKEN_MAX_THREADS)
 #define KRAKEN_MAX_THREADS              0x04
-#endif
+#endif // KRAKEN_MAX_THREADS
 
 
 // Maxium stack size
 #if !defined( KRAKEN_STACK_SIZE )
+
 #if KRAKEN_ARCH == KRAKEN_ARCH_X86
 // use 2mb stacks for 64bit architectures
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2
+
 #else
 // use 2mb stacks for 64bit architectures
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2
-#endif
+
+#endif // KRAKEN_ARCH == KRAKEN_ARCH_X86
+
 // use 2mb stacks for 64bit architectures
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2 
-#endif
+
+#endif // !defined( KRAKEN_STACK_SIZE )
 
 
 // architecture selection
@@ -420,6 +426,17 @@ struct kraken_runtime* kraken_initialize_runtime
 } // kraken_initialize_runtime
 
 
+/// ### kraken_switch
+/// Prints the contents of a kraken_runtime (see struct kraken_runtme)
+/// ```C
+/// void kraken_initialize_runtime ( void ) 
+/// ```
+/// Parameter   | Description
+/// ------------|----------------------------------------------------------------
+/// old_context | Old context
+/// new_context | New context
+/// runtime     | Pointer to a runtime
+/// > Returns a pointer to `struct kraken_runtime`
 __asm__
 (
     ".globl _kraken_switch, kraken_switch\n\t"

@@ -97,10 +97,16 @@ span.hljs-string, span.hljs-number
     border-radius: 0;
     border-bottom: 0;
     margin: 0px;
+    padding: 0.195em;
 }
 
 
-p:empty { display: none; }
+pre
+{
+    resize: none !important ;
+}
+
+a.tocTop, p:empty { display: none !important; }
 
 .md table.table, .table, .md div.table 
 {
