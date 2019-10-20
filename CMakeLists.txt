@@ -15,6 +15,16 @@ add_executable( kraken_demo
                 kraken_demo.c )
 
 
+if ( BUILD_DOCS )
+    add_custom_target( KRAKEN_DOCS
+                       COMMAND echo '====== building docs ====='
+                       COMMAND stddoc < kraken.h > docs/kraken_doc.html
+                       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} )
+
+    add_dependencies( ${PROJECT_NAME} KRAKEN_DOCS )
+endif()
+
+
 add_executable( kraken_test
                 kraken.h
                 kraken_test.c )

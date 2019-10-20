@@ -68,7 +68,7 @@
 /// }
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-/// ## Background
+/// ## Internals
 ///
 ///
 ///
@@ -200,14 +200,48 @@ struct kraken_context
 };
 
 
+/// ## Structs & Enums
+//
+/// ### kraken_status
+/// Represents the state of a thread during program execution.
+/// Please see descriptions of expected states below.
+/// ```
+/// enum kraken_status
+/// {
+///     STOPPED,
+///     RUNNING,
+///     READY
+/// };
+/// ```
+/// Member  | Description  
+/// --------|-----------------------------------------------------
+/// STOPPED | Indicates a thread has been stopped
+/// RUNNING | Indicates a thread currently being executed on the processor
+/// READY   | Indicates a thread that is ready to run on a processor core
 enum kraken_status
 {
     STOPPED,
     RUNNING,
     READY
-};
+}; // kraken_status
 
 
+/// ### kraken_thread
+/// Represents a thread running on a processor core.
+/// ```
+/// struct kraken_status
+/// {
+///     struct kraken_context   context,
+///     enum   kraken_status    status,
+///     char*                   stack_ptr,
+///     uint16_t                id
+/// };
+/// ```
+/// Member       | Description  
+/// -------------|-----------------------------------------------------
+/// context      | The state of the processor during the thread's execution
+/// status       | The status of the thread during program execution.
+/// stack_ptr    | A pointer to the first byte of the thread's stack
 struct kraken_thread
 {
     struct kraken_context context;
@@ -242,31 +276,31 @@ void kraken_run (
 
 
 int kraken_start_thread (
-    struct kraken_runtime*,
-    function_type
+    struct kraken_runtime*, // runtime
+    function_type           // thread_function
 );
 
 
 static void kraken_guard (
-    struct kraken_runtime*
+    struct kraken_runtime* // runtime
 );
 
 
 bool kraken_yield (
-    struct kraken_runtime*
+    struct kraken_runtime* // runtime
 );
 
 
 void kraken_print_state (
-    struct kraken_runtime*,
-    bool
+    struct kraken_runtime*, // runtime
+    bool                    // only_current_thread
 );
 
 
 static void kraken_switch (
-    struct kraken_context*,
-    struct kraken_context*,
-    struct kraken_runtime*
+    struct kraken_context*, // old_context
+    struct kraken_context*, // new_context
+    struct kraken_runtime*  // runtime
 );
 
 
@@ -427,9 +461,12 @@ struct kraken_runtime* kraken_initialize_runtime
 
 
 /// ### kraken_switch
-/// Prints the contents of a kraken_runtime (see struct kraken_runtme)
+/// Switches between old and new processor contexts when a new thread is ready for
+/// execution.
 /// ```C
-/// void kraken_initialize_runtime ( void ) 
+/// void kraken_switch ( struct kraken_context* old_context,
+///                      struct kraken_context* new_context,
+///                      struct kraken_runtime* runtime ) 
 /// ```
 /// Parameter   | Description
 /// ------------|----------------------------------------------------------------
@@ -478,6 +515,15 @@ __asm__
 );
 
 
+/// ### kraken_guard
+/// Prints the contents of a kraken_runtime (see struct kraken_runtme)
+/// ```C
+/// void kraken_initialize_runtime ( void ) 
+/// ```
+/// Parameter   | Description
+/// ------------|----------------------------------------------------------------
+/// runtime     | A pointer to `struct kraken_runtime`
+/// Does not return.
 static void kraken_guard
 (
     struct kraken_runtime*  runtime
@@ -503,6 +549,15 @@ static void kraken_guard
 } // kraken_guard
 
 
+/// ### kraken_yield
+/// Switches to a different thread once the current thread has completed its work
+/// ```C
+/// void kraken_initialize_runtime ( void )
+/// ```
+/// Parameter   | Description
+/// ------------|----------------------------------------------------------------
+/// runtime     | A pointer to `struct kraken_runtime`
+/// Does not return.
 bool kraken_yield
 (
     struct kraken_runtime*  runtime
@@ -557,6 +612,16 @@ bool kraken_yield
 } // kraken_yield
 
 
+
+/// ### kraken_start_thread
+/// Switches to a different thread once the current thread has completed its work
+/// ```C
+/// void kraken_initialize_runtime ( void )
+/// ```
+/// Parameter   | Description
+/// ------------|----------------------------------------------------------------
+/// runtime     | A pointer to `struct kraken_runtime`
+/// Does not return.
 int kraken_start_thread
 (
     struct kraken_runtime*  runtime,
@@ -591,14 +656,12 @@ int kraken_start_thread
 
 #if KRAKEN_ARCH == KRAKEN_ARCH_X86_64
     *( uint64_t* )&( new_thread->stack[ KRAKEN_STACK_SIZE -  8 ] ) = ( uint64_t )kraken_guard;
-
     *( uint64_t* )&( new_thread->stack[ KRAKEN_STACK_SIZE - 16 ] ) = ( uint64_t )thread_func;
 
     new_thread->context.rsp = ( uint64_t )&( new_thread->stack[ KRAKEN_STACK_SIZE - 16 ] );
 
 #elif KRAKEN_ARCH == KRAKEN_ARCH_X86
     *( uint32_t* )&( new_thread->stack[ KRAKEN_STACK_SIZE -  4 ] ) = ( uint32_t )kraken_guard;
-
     *( uint32_t* )&( new_thread->stack[ KRAKEN_STACK_SIZE -  8 ] ) = ( uint32_t )thread_func;
 
     new_thread->context.esp = ( uint32_t )&( new_thread->stack[ KRAKEN_STACK_SIZE - 8 ] );
