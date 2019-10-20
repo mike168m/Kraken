@@ -15,7 +15,10 @@ body
     overflow: auto !important;
     color: white !important;
     border: none !important;
-    left: 15em !important;
+    left: 12% !important;
+    line-height: 0%;
+    margin: 0;
+
 }
 
 
@@ -85,7 +88,7 @@ span.hljs-string, span.hljs-number
 {
     background: #333;
     border: 1px solid #bc9ad2;
-    border-radius: 0.25em;
+    border-radius: 0em;
     box-shadow: 15px 20px #111;
 }
 
