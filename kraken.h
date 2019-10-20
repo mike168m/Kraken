@@ -534,18 +534,19 @@ __asm__
     "_kraken_switch:                     \n\t"
     "kraken_switch:                      \n\t"
 #if KRAKEN_ARCH==KRAKEN_ARCH_X86_64
-    // Swap contexts
-    //"call check_current_thread_ptr      \n\t"
-#ifdef KRAKEN_DEBUG // interrupt gdb if build type is debug.
-    //"int    $3                           \n\t"
-#endif
-    "movq   %rsp,       0x00(%rdi)             \n\t"
-    "movq   %r15,       0x08(%rdi)             \n\t"
-    "movq   %r14,       0x10(%rdi)             \n\t"
-    "movq   %r13,       0x18(%rdi)             \n\t"
-    "movq   %r12,       0x20(%rdi)             \n\t"
-    "movq   %rbx,       0x28(%rdi)             \n\t"
-    "movq   %rbp,       0x30(%rdi)             \n\t"
+#ifdef KRAKEN_DEBUG
+#if KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1 
+    // interrupt gdb if build type is debug.
+    "int    $3                           \n\t"
+#endif // KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1
+#endif // KRAKEN_DEBUG
+    "movq   %rsp,       0x00(%rdi)       \n\t"
+    "movq   %r15,       0x08(%rdi)       \n\t"
+    "movq   %r14,       0x10(%rdi)       \n\t"
+    "movq   %r13,       0x18(%rdi)       \n\t"
+    "movq   %r12,       0x20(%rdi)       \n\t"
+    "movq   %rbx,       0x28(%rdi)       \n\t"
+    "movq   %rbp,       0x30(%rdi)       \n\t"
     "movq   0x00(%rsi), %rsp             \n\t"
     "movq   0x08(%rsi), %r15             \n\t"
     "movq   0x10(%rsi), %r14             \n\t"
@@ -557,9 +558,9 @@ __asm__
     // jump to thread's function
     "ret                                 \n\t"
 #elif KRAKEN_ARCH==KRAKEN_ARCH_X86
-    "movl   %esp,       0x00(%edi)             \n\t"
-    "movl   %ebx,       0x28(%edi)             \n\t"
-    "movl   %ebp,       0x30(%edi)             \n\t"
+    "movl   %esp,       0x00(%edi)       \n\t"
+    "movl   %ebx,       0x28(%edi)       \n\t"
+    "movl   %ebp,       0x30(%edi)       \n\t"
     "movl   0x00(%esi), %esp             \n\t"
     "movl   0x28(%esi), %ebx             \n\t"
     "movl   0x30(%esi), %ebp             \n\t"
