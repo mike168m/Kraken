@@ -14,6 +14,7 @@
 
 /// <link rel="stylesheet" href="./kraken_doc_style.css">
 /// # Kraken ![](https://img.shields.io/travis/mike168m/Kraken?label=x86&style=flat-square)  ![](https://img.shields.io/travis/mike168m/Kraken?label=arm&style=flat-square)
+/// ***
 /// Kraken is an opensource header only c library for writing multicore 
 /// multithread programs using green threads on x86 (Linux, Windows & MacOSX), AVR amd ARM.
 /// !!! WARNING: Implementation in progress
@@ -23,7 +24,9 @@
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Bash
 /// wget -O [your_include_dir]/kraken.h https://git.io/Je4U2
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//
 /// ## Example
+/// ***
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~C
 /// #define  KRAKEN_SCHEDULER    0x01
 /// #define  KRAKEN_MAX_THREADS  0x04
@@ -69,9 +72,17 @@
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /// ## Internals
-///
-///
-///
+/// ***
+/// A processor is always executing one instruction at a time.
+/// ****************************************************************
+//  *   .-.                                                        *
+/// *  | A |                                                        *
+/// *   .-.                                                        *
+/// *    |                                                          *
+/// *    |                                                          *
+/// *    |                                                          *
+/// *    V                                                          *
+/// ***************************************************************
 //==============================================================================
 //
 //                                  MACROS
@@ -176,6 +187,38 @@ struct kraken_runtime* runtime\
 //               LOCAL STRUCTURES & ENUMS
 //
 //========================================================
+
+
+/// ## Structs & Enums
+/// ***
+/// ### kraken_context
+/// Represents the state of a thread during program execution.
+/// Please see descriptions of expected states below.
+/// ```
+/// struct kraken_context
+/// {
+/// #if KRAKEN_ARCH == KRAKEN_ARCH_X86_64
+///     uint64_t    rsp;
+///     uint64_t    r15;
+///     uint64_t    r14;
+///     uint64_t    r13;
+///     uint64_t    rbx;
+///     uint64_t    rbp;
+/// #elif KRAKEN_ARCH == KRAKEN_ARCH_X86
+///     uint32_t    esp;
+///     uint32_t    ebx;
+///     uint32_t    ebp;
+/// #elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
+///     uint8_t     r20;
+///     uint8_t     r24;
+///     uint8_t     sp ;
+/// };
+/// ```
+/// Member  | Description  
+/// --------|-----------------------------------------------------
+/// STOPPED | Indicates a thread has been stopped
+/// RUNNING | Indicates a thread currently being executed on the processor
+/// READY   | Indicates a thread that is ready to run on a processor core
 struct kraken_context
 {
 #if KRAKEN_ARCH == KRAKEN_ARCH_X86_64
@@ -200,8 +243,6 @@ struct kraken_context
 };
 
 
-/// ## Structs & Enums
-//
 /// ### kraken_status
 /// Represents the state of a thread during program execution.
 /// Please see descriptions of expected states below.
@@ -251,6 +292,20 @@ struct kraken_thread
 };
 
 
+/// ### kraken_runtime
+/// Represents a thread running on a processor core.
+/// ```
+/// struct kraken_runtime
+/// {
+///     struct   kraken_thread    threads[KRAKEN_MAX_THREADS],
+///     struct   kraken_thread    current_thread,
+/// };
+/// ```
+/// Member       | Description  
+/// -------------|-----------------------------------------------------
+/// context      | The state of the processor during the thread's execution
+/// status       | The status of the thread during program execution.
+/// stack_ptr    | A pointer to the first byte of the thread's stack
 struct kraken_runtime
 {
     struct kraken_thread threads[KRAKEN_MAX_THREADS];
@@ -312,6 +367,7 @@ static void kraken_switch (
 
 
 /// ## Functions
+/// ***
 /// ### kraken_print_thread_state
 /// Prints the contents of a kraken_thread (see struct kraken_thread)
 /// ```C
@@ -440,13 +496,11 @@ struct kraken_runtime* kraken_initialize_runtime
 )
 {
     struct kraken_runtime* runtime = ( struct kraken_runtime* )
-        malloc( sizeof( struct kraken_runtime ) );
+        calloc( 0, sizeof( struct kraken_runtime ) );
 
-    bzero( ( void* )runtime, sizeof( struct kraken_runtime ) );
-
-    runtime->current_thread = &runtime->threads[ 0 ];
+    runtime->current_thread         = &runtime->threads[ 0 ];
     runtime->current_thread->status = RUNNING;
-    runtime->current_thread->stack = ( char* )malloc( sizeof( char ) * KRAKEN_STACK_SIZE );
+    runtime->current_thread->stack  = ( char* )malloc( sizeof( char ) * KRAKEN_STACK_SIZE );
 
     const char* const thread_stack = runtime->current_thread->stack;
     assert( ( thread_stack == NULL, "KRAKEN: Can't allocate memory for thread stack." ) );
@@ -485,13 +539,13 @@ __asm__
 #ifdef KRAKEN_DEBUG // interrupt gdb if build type is debug.
     //"int    $3                           \n\t"
 #endif
-    "movq   %rsp, 0x00(%rdi)             \n\t"
-    "movq   %r15, 0x08(%rdi)             \n\t"
-    "movq   %r14, 0x10(%rdi)             \n\t"
-    "movq   %r13, 0x18(%rdi)             \n\t"
-    "movq   %r12, 0x20(%rdi)             \n\t"
-    "movq   %rbx, 0x28(%rdi)             \n\t"
-    "movq   %rbp, 0x30(%rdi)             \n\t"
+    "movq   %rsp,       0x00(%rdi)             \n\t"
+    "movq   %r15,       0x08(%rdi)             \n\t"
+    "movq   %r14,       0x10(%rdi)             \n\t"
+    "movq   %r13,       0x18(%rdi)             \n\t"
+    "movq   %r12,       0x20(%rdi)             \n\t"
+    "movq   %rbx,       0x28(%rdi)             \n\t"
+    "movq   %rbp,       0x30(%rdi)             \n\t"
     "movq   0x00(%rsi), %rsp             \n\t"
     "movq   0x08(%rsi), %r15             \n\t"
     "movq   0x10(%rsi), %r14             \n\t"
@@ -503,9 +557,9 @@ __asm__
     // jump to thread's function
     "ret                                 \n\t"
 #elif KRAKEN_ARCH==KRAKEN_ARCH_X86
-    "movl   %esp, 0x00(%edi)             \n\t"
-    "movl   %ebx, 0x28(%edi)             \n\t"
-    "movl   %ebp, 0x30(%edi)             \n\t"
+    "movl   %esp,       0x00(%edi)             \n\t"
+    "movl   %ebx,       0x28(%edi)             \n\t"
+    "movl   %ebp,       0x30(%edi)             \n\t"
     "movl   0x00(%esi), %esp             \n\t"
     "movl   0x28(%esi), %ebx             \n\t"
     "movl   0x30(%esi), %ebp             \n\t"
@@ -612,7 +666,6 @@ bool kraken_yield
 } // kraken_yield
 
 
-
 /// ### kraken_start_thread
 /// Switches to a different thread once the current thread has completed its work
 /// ```C
@@ -630,7 +683,7 @@ int kraken_start_thread
 {
     struct kraken_thread* new_thread;
 
-    // look for a home for the new thread;
+    // look for a slot for the new thread;
     for ( new_thread = &runtime->threads[ 0 ]; true ;new_thread++ )
     {
         if ( new_thread == &runtime->threads[ KRAKEN_MAX_THREADS ] )
@@ -672,5 +725,24 @@ int kraken_start_thread
 
     return 0;
 } // kraken_start_thread
+
+
+/// ## Credits
+/// ***
+/// <i>
+/// Copyright 2019 Michael Osei
+///
+/// Licensed under the Apache License, Version 2.0 (the "License");
+/// you may not use this file except in compliance with the License.
+/// You may obtain a copy of the License at
+/// 
+///     http://www.apache.org/licenses/LICENSE-2.0
+/// 
+/// Unless required by applicable law or agreed to in writing, software
+/// distributed under the License is distributed on an "AS IS" BASIS,
+/// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+/// See the License for the specific language governing permissions and
+/// limitations under the License.
+/// </i>
 
 #endif // KRAKEN_H
