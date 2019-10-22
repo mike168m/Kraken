@@ -73,16 +73,28 @@
 
 /// ## Internals
 /// ***
-/// A processor is always executing one instruction at a time.
-/// ****************************************************************
-//  *   .-.                                                        *
-/// *  | A |                                                        *
-/// *   .-.                                                        *
-/// *    |                                                          *
-/// *    |                                                          *
-/// *    |                                                          *
-/// *    V                                                          *
-/// ***************************************************************
+/// A processor is always executing one instruction from a process at any point in time but modern
+/// system make it seems as if a gazillion are being executed at the same time. This isn't the
+/// case and simply the result of excellent engineering by those working on these systems.
+/// Today's operating and CPUs systems use nifty tricks to quickly switch between processes
+/// or blocks of instructions to give the appearance multiple processes running at the same time. 
+/// ***************************************************************************
+/// * What it looks like           What's actually happening                  *
+/// *       .-.   .-.                  .-.            .-.                     *
+/// * Time | A | | B |                | A |          | B |                    *
+/// *  |    '+'   '+'                  '+'            '+'                     *
+/// *  |     |     |                    |   switch     |                      *
+/// *  |     |     |                    |------------->|                      *
+/// *  |     |     |                    |              |                      *
+/// *  |     |     |                    |              |                      *
+/// *  |     |     |                    |              |  Two processes A & B *
+/// *  |     |     |                    |   switch     |  running on CPU      *
+/// *  |     |     |                    |<-------------'                      *
+/// *  v     v     v                    v                                     *
+/// *  o     o     o                    o                                     *
+/// ***************************************************************************
+/// This switch is called a context switch. During each switch the processor state (registers,
+/// stack pointer etc) are saved for later and new values are loaded to execute a new process.
 //==============================================================================
 //
 //                                  MACROS
@@ -239,6 +251,7 @@ struct kraken_context
     uint8_t     sp;
 #else
     #error      "Architecture not defined or implemented for Kraken library!"
+
 #endif
 };
 
@@ -496,7 +509,9 @@ struct kraken_runtime* kraken_initialize_runtime
 )
 {
     struct kraken_runtime* runtime = ( struct kraken_runtime* )
-        calloc( 0, sizeof( struct kraken_runtime ) );
+        malloc( sizeof( struct kraken_runtime ) );
+
+    bzero( runtime, sizeof( struct kraken_runtime ) );
 
     runtime->current_thread         = &runtime->threads[ 0 ];
     runtime->current_thread->status = RUNNING;
