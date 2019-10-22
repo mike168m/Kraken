@@ -73,16 +73,28 @@
 
 /// ## Internals
 /// ***
-/// A processor is always executing one instruction at a time.
-/// ****************************************************************
-//  *   .-.                                                        *
-/// *  | A |                                                        *
-/// *   .-.                                                        *
-/// *    |                                                          *
-/// *    |                                                          *
-/// *    |                                                          *
-/// *    V                                                          *
-/// ***************************************************************
+/// A processor is always executing one instruction from a process at any point in time but modern
+/// system make it seems as if a gazillion are being executed at the same time. This isn't the
+/// case and simply the result of excellent engineering by those working on these systems.
+/// Today's operating and CPUs systems use nifty tricks to quickly switch between processes
+/// or blocks of instructions to give the appearance multiple processes running at the same time. 
+/// ***************************************************************************
+/// * What it looks like           What's actually happening                  *
+/// *       .-.   .-.                  .-.            .-.                     *
+/// * Time | A | | B |                | A |          | B |                    *
+/// *  |    '+'   '+'                  '+'            '+'                     *
+/// *  |     |     |                    |   switch     |                      *
+/// *  |     |     |                    |------------->|                      *
+/// *  |     |     |                    |              |                      *
+/// *  |     |     |                    |              |                      *
+/// *  |     |     |                    |              |  Two processes A & B *
+/// *  |     |     |                    |   switch     |  running on CPU      *
+/// *  |     |     |                    |<-------------'                      *
+/// *  v     v     v                    v                                     *
+/// *  o     o     o                    o                                     *
+/// ***************************************************************************
+/// This switch is called a context switch. During each switch the processor state (registers,
+/// stack pointer etc) are saved for later and new values are loaded to execute a new process.
 //==============================================================================
 //
 //                                  MACROS
@@ -239,6 +251,7 @@ struct kraken_context
     uint8_t     sp;
 #else
     #error      "Architecture not defined or implemented for Kraken library!"
+
 #endif
 };
 
@@ -496,7 +509,9 @@ struct kraken_runtime* kraken_initialize_runtime
 )
 {
     struct kraken_runtime* runtime = ( struct kraken_runtime* )
-        calloc( 0, sizeof( struct kraken_runtime ) );
+        malloc( sizeof( struct kraken_runtime ) );
+
+    bzero( runtime, sizeof( struct kraken_runtime ) );
 
     runtime->current_thread         = &runtime->threads[ 0 ];
     runtime->current_thread->status = RUNNING;
@@ -534,18 +549,19 @@ __asm__
     "_kraken_switch:                     \n\t"
     "kraken_switch:                      \n\t"
 #if KRAKEN_ARCH==KRAKEN_ARCH_X86_64
-    // Swap contexts
-    //"call check_current_thread_ptr      \n\t"
-#ifdef KRAKEN_DEBUG // interrupt gdb if build type is debug.
-    //"int    $3                           \n\t"
-#endif
-    "movq   %rsp,       0x00(%rdi)             \n\t"
-    "movq   %r15,       0x08(%rdi)             \n\t"
-    "movq   %r14,       0x10(%rdi)             \n\t"
-    "movq   %r13,       0x18(%rdi)             \n\t"
-    "movq   %r12,       0x20(%rdi)             \n\t"
-    "movq   %rbx,       0x28(%rdi)             \n\t"
-    "movq   %rbp,       0x30(%rdi)             \n\t"
+#ifdef KRAKEN_DEBUG
+#if KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1 
+    // interrupt gdb if build type is debug.
+    "int    $3                           \n\t"
+#endif // KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1
+#endif // KRAKEN_DEBUG
+    "movq   %rsp,       0x00(%rdi)       \n\t"
+    "movq   %r15,       0x08(%rdi)       \n\t"
+    "movq   %r14,       0x10(%rdi)       \n\t"
+    "movq   %r13,       0x18(%rdi)       \n\t"
+    "movq   %r12,       0x20(%rdi)       \n\t"
+    "movq   %rbx,       0x28(%rdi)       \n\t"
+    "movq   %rbp,       0x30(%rdi)       \n\t"
     "movq   0x00(%rsi), %rsp             \n\t"
     "movq   0x08(%rsi), %r15             \n\t"
     "movq   0x10(%rsi), %r14             \n\t"
@@ -557,9 +573,9 @@ __asm__
     // jump to thread's function
     "ret                                 \n\t"
 #elif KRAKEN_ARCH==KRAKEN_ARCH_X86
-    "movl   %esp,       0x00(%edi)             \n\t"
-    "movl   %ebx,       0x28(%edi)             \n\t"
-    "movl   %ebp,       0x30(%edi)             \n\t"
+    "movl   %esp,       0x00(%edi)       \n\t"
+    "movl   %ebx,       0x28(%edi)       \n\t"
+    "movl   %ebp,       0x30(%edi)       \n\t"
     "movl   0x00(%esi), %esp             \n\t"
     "movl   0x28(%esi), %ebx             \n\t"
     "movl   0x30(%esi), %ebp             \n\t"

@@ -59,15 +59,19 @@ int main ( void )
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Internals
 ***
-A processor is always executing one instruction at a time.
-****************************************************************
+A processor is always executing one instruction at a time. This isn't the case and simply
+the result of excellent engineering by those working on these systems.
+Today's operating and CPUs systems use nifty tricks to give the appearance multiple processes
+running at the same time. 
+*****************************************************************
+*   .-.                                                         *
 *  | A |                                                        *
-*   .-.                                                        *
+*   .-.                                                         *
 *    |                                                          *
 *    |                                                          *
 *    |                                                          *
 *    V                                                          *
-***************************************************************
+*****************************************************************
 ## Structs & Enums
 ***
 ### kraken_context

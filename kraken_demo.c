@@ -29,17 +29,6 @@ KRAKEN_THREAD_FUNCTION( t2,
 })
 
 
-KRAKEN_THREAD_FUNCTION( t3,
-{
-    static int i = 0; 
-    for (; i < 10; i++ ) 
-    {
-        printf( "In thread 3.\n" );
-        kraken_yield( runtime ); 
-    }
-})
-
-
 int main
 (
     void
@@ -50,7 +39,6 @@ int main
 
     KRAKEN_SCHEDULE_THREAD( runtime, t1 );
     KRAKEN_SCHEDULE_THREAD( runtime, t2 );
-    KRAKEN_SCHEDULE_THREAD( runtime, t3 );
 
     kraken_run( runtime, 0 );
 }

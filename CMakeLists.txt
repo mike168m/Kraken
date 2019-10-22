@@ -15,6 +15,9 @@ add_executable( kraken_demo
                 kraken_demo.c )
 
 
+SET( GCC_DEBUG_OPTIONS "-pg" )
+add_compile_options( ${GCC_DEBUG_OPTIONS} )
+
 if ( BUILD_DOCS )
     add_custom_target( KRAKEN_DOCS
                        COMMAND echo '====== building docs ====='

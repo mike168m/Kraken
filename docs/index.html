@@ -3,6 +3,7 @@
 <style>.backtick, .tilde {overflow-x: auto;} .longTOC {overflow-x: hidden;}</style>
 <link rel="stylesheet" href="./kraken_doc_style.css">
 # Kraken ![](https://img.shields.io/travis/mike168m/Kraken?label=x86&style=flat-square)  ![](https://img.shields.io/travis/mike168m/Kraken?label=arm&style=flat-square)
+***
 Kraken is an opensource header only c library for writing multicore 
 multithread programs using green threads on x86 (Linux, Windows & MacOSX), AVR amd ARM.
 !!! WARNING: Implementation in progress
@@ -12,6 +13,7 @@ multithread programs using green threads on x86 (Linux, Windows & MacOSX), AVR a
 wget -O [your_include_dir]/kraken.h https://git.io/Je4U2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Example
+***
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~C
 #define  KRAKEN_SCHEDULER    0x01
 #define  KRAKEN_MAX_THREADS  0x04
@@ -55,11 +57,108 @@ int main ( void )
     kraken_run( runtime, 0 );
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## Background
-
-
-
+## Internals
+***
+A processor is always executing one instruction from a process at any point in time but modern
+system make it seems as if a gazillion are being executed at the same time. This isn't the
+case and simply the result of excellent engineering by those working on these systems.
+Today's operating and CPUs systems use nifty tricks to quickly switch between processes
+or blocks of instructions to give the appearance multiple processes running at the same time. 
+***************************************************************************
+* What it looks like           What's actually happening                  *
+*       .-.   .-.                  .-.            .-.                     *
+* Time | A | | B |                | A |          | B |                    *
+*  |    '+'   '+'                  '+'            '+'                     *
+*  |     |     |                    |   switch     |                      *
+*  |     |     |                    |------------->|                      *
+*  |     |     |                    |              |                      *
+*  |     |     |                    |              |                      *
+*  |     |     |                    |              |  Two processes A & B *
+*  |     |     |                    |   switch     |  running on CPU      *
+*  |     |     |                    |<-------------'                      *
+*  v     v     v                    v                                     *
+*  o     o     o                    o                                     *
+***************************************************************************
+This switch is called a context switch. During each switch the processor state (registers,
+stack pointer etc) are saved for later and new values are loaded to execute a new process.
+## Structs & Enums
+***
+### kraken_context
+Represents the state of a thread during program execution.
+Please see descriptions of expected states below.
+```
+struct kraken_context
+{
+#if KRAKEN_ARCH == KRAKEN_ARCH_X86_64
+    uint64_t    rsp;
+    uint64_t    r15;
+    uint64_t    r14;
+    uint64_t    r13;
+    uint64_t    rbx;
+    uint64_t    rbp;
+#elif KRAKEN_ARCH == KRAKEN_ARCH_X86
+    uint32_t    esp;
+    uint32_t    ebx;
+    uint32_t    ebp;
+#elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
+    uint8_t     r20;
+    uint8_t     r24;
+    uint8_t     sp ;
+};
+```
+Member  | Description  
+--------|-----------------------------------------------------
+STOPPED | Indicates a thread has been stopped
+RUNNING | Indicates a thread currently being executed on the processor
+READY   | Indicates a thread that is ready to run on a processor core
+### kraken_status
+Represents the state of a thread during program execution.
+Please see descriptions of expected states below.
+```
+enum kraken_status
+{
+    STOPPED,
+    RUNNING,
+    READY
+};
+```
+Member  | Description  
+--------|-----------------------------------------------------
+STOPPED | Indicates a thread has been stopped
+RUNNING | Indicates a thread currently being executed on the processor
+READY   | Indicates a thread that is ready to run on a processor core
+### kraken_thread
+Represents a thread running on a processor core.
+```
+struct kraken_status
+{
+    struct kraken_context   context,
+    enum   kraken_status    status,
+    char*                   stack_ptr,
+    uint16_t                id
+};
+```
+Member       | Description  
+-------------|-----------------------------------------------------
+context      | The state of the processor during the thread's execution
+status       | The status of the thread during program execution.
+stack_ptr    | A pointer to the first byte of the thread's stack
+### kraken_runtime
+Represents a thread running on a processor core.
+```
+struct kraken_runtime
+{
+    struct   kraken_thread    threads[KRAKEN_MAX_THREADS],
+    struct   kraken_thread    current_thread,
+};
+```
+Member       | Description  
+-------------|-----------------------------------------------------
+context      | The state of the processor during the thread's execution
+status       | The status of the thread during program execution.
+stack_ptr    | A pointer to the first byte of the thread's stack
 ## Functions
+***
 ### kraken_print_thread_state
 Prints the contents of a kraken_thread (see struct kraken_thread)
 ```C
@@ -100,15 +199,62 @@ Parameter   | Description
 void /**/   | No parameters!!!
 > Returns a pointer to `struct kraken_runtime`
 ### kraken_switch
+Switches between old and new processor contexts when a new thread is ready for
+execution.
+```C
+void kraken_switch ( struct kraken_context* old_context,
+                     struct kraken_context* new_context,
+                     struct kraken_runtime* runtime ) 
+```
+Parameter   | Description
+------------|----------------------------------------------------------------
+old_context | Old context
+new_context | New context
+runtime     | Pointer to a runtime
+> Returns a pointer to `struct kraken_runtime`
+### kraken_guard
 Prints the contents of a kraken_runtime (see struct kraken_runtme)
 ```C
 void kraken_initialize_runtime ( void ) 
 ```
 Parameter   | Description
 ------------|----------------------------------------------------------------
-old_ctx     | Old context
-new_ctx     | New context
-runtime     | Pointer to a runtime
-> Returns a pointer to `struct kraken_runtime`
+runtime     | A pointer to `struct kraken_runtime`
+Does not return.
+### kraken_yield
+Switches to a different thread once the current thread has completed its work
+```C
+void kraken_initialize_runtime ( void )
+```
+Parameter   | Description
+------------|----------------------------------------------------------------
+runtime     | A pointer to `struct kraken_runtime`
+Does not return.
+### kraken_start_thread
+Switches to a different thread once the current thread has completed its work
+```C
+void kraken_initialize_runtime ( void )
+```
+Parameter   | Description
+------------|----------------------------------------------------------------
+runtime     | A pointer to `struct kraken_runtime`
+Does not return.
+## Credits
+***
+<i>
+Copyright 2019 Michael Osei
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+</i>
 <script>markdeepOptions={tocStyle:'long'};</script>
 <!-- Markdeep: --><script src='https://casual-effects.com/markdeep/latest/markdeep.min.js?'></script>
