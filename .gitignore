@@ -10,6 +10,7 @@
 !deps/googletest
 !docs/index.html
 !docs/style.css
-!deps/simavr/
+!deps/simavr
 
+.gitmodules
 

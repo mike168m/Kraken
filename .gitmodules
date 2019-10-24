@@ -1,0 +1,3 @@
+[submodule "deps/simavr"]
+	path = deps/simavr
+	url = https://github.com/buserror/simavr
