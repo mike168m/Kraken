@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// <link rel="stylesheet" href="./kraken_doc_style.css">
+/// <link rel="stylesheet" href="./style.css">
 /// # Kraken ![](https://img.shields.io/travis/mike168m/Kraken?label=x86&style=flat-square)  ![](https://img.shields.io/travis/mike168m/Kraken?label=arm&style=flat-square)
 /// ***
 /// Kraken is an opensource header only c library for writing multicore 
@@ -74,27 +74,33 @@
 /// ## Internals
 /// ***
 /// A processor is always executing one instruction from a process at any point in time but modern
-/// system make it seems as if a gazillion are being executed at the same time. This isn't the
-/// case and simply the result of excellent engineering by those working on these systems.
-/// Today's operating and CPUs systems use nifty tricks to quickly switch between processes
+/// systems make it seems as if a gazillion are being executed at the same time. This isn't the
+/// case but rather the result of excellent engineering by those working on these systems.
+/// Today's operating and CPUs use nifty tricks to quickly switch between processes
 /// or blocks of instructions to give the appearance multiple processes running at the same time. 
-/// ***************************************************************************
-/// * What it looks like           What's actually happening                  *
-/// *       .-.   .-.                  .-.            .-.                     *
-/// * Time | A | | B |                | A |          | B |                    *
-/// *  |    '+'   '+'                  '+'            '+'                     *
-/// *  |     |     |                    |   switch     |                      *
-/// *  |     |     |                    |------------->|                      *
-/// *  |     |     |                    |              |                      *
-/// *  |     |     |                    |              |                      *
-/// *  |     |     |                    |              |  Two processes A & B *
-/// *  |     |     |                    |   switch     |  running on CPU      *
-/// *  |     |     |                    |<-------------'                      *
-/// *  v     v     v                    v                                     *
-/// *  o     o     o                    o                                     *
-/// ***************************************************************************
-/// This switch is called a context switch. During each switch the processor state (registers,
-/// stack pointer etc) are saved for later and new values are loaded to execute a new process.
+/// ***********************************************************************
+/// * What it looks like      What's actually happening                   *
+/// *       .-.   .-.              .-.            .-.   /process B starts *
+/// * Time | A | | B |       Time | A |          | B | /                  *
+/// *  |    '+'   '+'         |    '+'            '+' /                   *
+/// *  |     |     |          |     |   switch     | /                    *
+/// *  |     |     |          |     |------------->|/                     *
+/// *  |     |     |          |     |              |                      *
+/// *  |     |     |          |     |              |                      *
+/// *  |     |     |          |     |              |  Two processes A & B *
+/// *  |     |     |          |     |   switch     |  running on CPU      *
+/// *  |     |     |          |     |<-------------'\                     *
+/// *  v     v     v          v     v                \                    *
+/// *  o     o     o          o     o                 process B ends      *
+/// ***********************************************************************
+/// This "switch" is called a context switch. During each switch the processor state (registers,
+/// stack pointer etc) is saved for use later and new values are loaded to execute a new process.
+/// This operation varies between various operating systems and this is just a general overview
+/// of it.
+///
+/// Fortunately, modern operating systems have this functionality built into them.
+/// There's even a good chance your programming language comes with support for threads
+/// So why does kraken exist? 
 //==============================================================================
 //
 //                                  MACROS
@@ -350,12 +356,12 @@ int kraken_start_thread (
 
 
 static void kraken_guard (
-    struct kraken_runtime* // runtime
+    struct kraken_runtime*  // runtime
 );
 
 
 bool kraken_yield (
-    struct kraken_runtime* // runtime
+    struct kraken_runtime*  // runtime
 );
 
 
@@ -548,7 +554,7 @@ __asm__
     ".globl _kraken_switch, kraken_switch\n\t"
     "_kraken_switch:                     \n\t"
     "kraken_switch:                      \n\t"
-#if KRAKEN_ARCH==KRAKEN_ARCH_X86_64
+#if KRAKEN_ARCH == KRAKEN_ARCH_X86_64
 #ifdef KRAKEN_DEBUG
 #if KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1 
     // interrupt gdb if build type is debug.
@@ -572,14 +578,14 @@ __asm__
     "movq   %rdx,       %rax             \n\t"
     // jump to thread's function
     "ret                                 \n\t"
-#elif KRAKEN_ARCH==KRAKEN_ARCH_X86
+#elif KRAKEN_ARCH == KRAKEN_ARCH_X86
     "movl   %esp,       0x00(%edi)       \n\t"
     "movl   %ebx,       0x28(%edi)       \n\t"
     "movl   %ebp,       0x30(%edi)       \n\t"
     "movl   0x00(%esi), %esp             \n\t"
     "movl   0x28(%esi), %ebx             \n\t"
     "movl   0x30(%esi), %ebp             \n\t"
-#elif KRAKEN_ARCH==KRAKEN_ARCH_AVR
+#elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
 
 #endif
 );
