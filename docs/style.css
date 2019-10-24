@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap');
+
+body 
+{
+    margin: auto;
+    background: #222;
+    color: white;
+    font-family: 'Roboto Mono',  monospace;
+    text-shadow: 2px 2px black
+}
+
+
+g { fill: #bc9ad2 !important; }
+
+
+path { stroke: #bc9ad2 !important; }
+
+.longTOC 
+{
+    overflow: auto !important;
+    color: white !important;
+    border: none !important;
+    left: 12% !important;
+    line-height: 0%;
+    margin: 0;
+
+}
+
+
+.longTOC > p > a 
+{
+    color: white !important ;
+    font-weight: 1000 !important ;
+
+}
+
+
+
+.longTOC  .tocHeader {
+    background:  #bc9ad2
+}
+
+.md h2, .md h1, .md h3, .md .nonumberh2 
+{
+    color: white;
+}
+
+
+span.line 
+{
+    background: #444;
+    box-shadow: 5px 5px #000;
+}
+
+
+span.hljs-keyword
+{
+    color: orange;
+}
+
+
+span.hljs-comment
+{
+    color: #8ac9ff;
+}
+
+
+span.hljs-params, span.hljs-title, span.hljs-built_in
+{
+    color: #00ff89 !important;
+}
+
+
+code
+{
+    font-weight: 1000;
+}
+
+
+span.hljs-string, span.hljs-number
+{
+    color: #ff1a15;
+}
+
+
+.md code
+{ 
+    box-shadow: 5px 10px #333;
+}
+
+
+.md pre.listing
+{
+    background: #333;
+    border: 1px solid #bc9ad2;
+    border-radius: 0em;
+    box-shadow: 15px 20px #111;
+}
+
+
+.md pre.listing.backtick
+{
+    box-shadow: none;    
+    border: 1px solid #bc9ad2;
+    border-radius: 0;
+    border-bottom: 0;
+    margin: 0px;
+    padding: 0.195em;
+}
+
+
+pre
+{
+    resize: none !important ;
+}
+
+a.tocTop, p:empty { display: none !important; }
+
+.md table.table, .table, .md div.table 
+{
+    width: 100.45% !important;
+    margin: 0px;
+}
+
+
+.md table.table th, .md table.table tr, .md table.table td 
+{
+    background: #333;
+    color: white;
+    border: 1px solid #bc9ad2;
+}
+
+
+

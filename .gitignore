@@ -5,3 +5,11 @@
 !Makefile
 !CMakeLists.txt
 !Readme.md
+!analyze_core_dump.sh
+!.travis.yml
+!deps/googletest
+!docs/index.html
+!docs/style.css
+
+
+
