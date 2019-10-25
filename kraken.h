@@ -401,7 +401,9 @@ static void kraken_print_thread_state
     struct kraken_thread*  current_thread
 )
 {
-    printf( "Thread %d address: %p.\n\
+    printf(
+#if KRAKEN_ARCH == KRAKEN_ARCH_X86_64 
+            "Thread %d address: %p.\n\
             context addr %p\n\
             \trsp: %p\n\
             \tr15: %d\n\
@@ -426,7 +428,9 @@ static void kraken_print_thread_state
             current_thread->context.rbp,
             &current_thread->status,
             current_thread->status,
-            current_thread->stack );
+            current_thread->stack 
+#endif
+                                    );
 } // kraken_print_thread_state
 
 
