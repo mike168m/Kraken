@@ -1,42 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 
-set( CMAKE_SYSTEM_NAME Generic )
-
-#======= OPTIONS ==============================
-
-option( BUILD_AVR  "BUILD_AVR"  OFF )
-option( BUILD_X86  "BUILD_x86"  OFF )
-option( BUILD_ARM  "BUILD_ARM"  OFF )
-option( BUILD_DOCS "BUILD_DOCS" OFF )
-
-#======= END OPTIONS ==========================
-
-
-#======= COMPILER SELECTION ====================
-
-if ( BUILD_AVR ) 
-    set( ARCH_TYPE          "AVR" )
-    set( ENV{CC}            "/usr/bin/avr-gcc" )
-    set( ENV{CXX}           "/usr/bin/avr-g++" )
-    set( CMAKE_C_COMPILER   "/usr/bin/avr-gcc" )
-    set( CMAKE_CXX_COMPILER "/usr/bin/avr-g++" )
-elseif ( BUILD_x86 OR BUILD_x64 )
-    set( ARCH_TYPE "X86" )
-    set( CMAKE_C_COMPILER   "/usr/bin/gcc" )
-    set( CMAKE_CXX_COMPILER "/usr/bin/g++" )
-endif( BUILD_AVR )
-message( "Env $ENV{CC} $ENV{CXX}")
-message( "Configured to build for ${ARCH_TYPE}")
-
-#======= COMPILER SELECTION =====================
-
-
-project( kraken )
-
-
-set( CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "" )
-set( CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "" )
+project(kraken C)
 
 
 set(CMAKE_C_STANDARD 11)
@@ -50,11 +15,8 @@ add_executable( kraken_demo
                 kraken_demo.c )
 
 
-set( GCC_DEBUG_OPTIONS "-pg" )
-set( GCC_PRINT_VERSION ""  )
-add_compile_options( ${GCC_DEBUG_OPTIONS}
-                     ${GCC_PRINT_VERSION} )
-
+SET( GCC_DEBUG_OPTIONS "-pg" )
+add_compile_options( ${GCC_DEBUG_OPTIONS} )
 
 if ( BUILD_DOCS )
     add_custom_target( KRAKEN_DOCS
@@ -62,7 +24,7 @@ if ( BUILD_DOCS )
                        COMMAND stddoc < kraken.h > docs/kraken_doc.html
                        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} )
 
-    add_dependencies( kraken_demo KRAKEN_DOCS )
+    add_dependencies( ${PROJECT_NAME} KRAKEN_DOCS )
 endif()
 
 
