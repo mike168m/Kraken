@@ -197,7 +197,6 @@ struct kraken_runtime* runtime\
 #include <stdint.h>
 #include <assert.h>
 #include <stdbool.h>
-#include <strings.h>
 
 
 //========================================================
@@ -519,9 +518,7 @@ struct kraken_runtime* kraken_initialize_runtime
 )
 {
     struct kraken_runtime* runtime = ( struct kraken_runtime* )
-        malloc( sizeof( struct kraken_runtime ) );
-
-    bzero( runtime, sizeof( struct kraken_runtime ) );
+        calloc( 0, sizeof( struct kraken_runtime ) );
 
     runtime->current_thread         = &runtime->threads[ 0 ];
     runtime->current_thread->status = RUNNING;
