@@ -155,14 +155,22 @@
 
 // architecture selection
 #ifndef KRAKEN_ARCH
+
+// x86 platform
 #if (defined(__x86_64) || defined(__x86_64__)) && (__x86_64 == 1 || __x86_64__ == 1)
 #define KRAKEN_ARCH KRAKEN_ARCH_X86_64
 #elif (defined(__i386) || defined(__i386__)) && (__i386 == 1 || __i386__ == 1)
 #define KRAKEN_ARCH KRAKEN_ARCH_X86
+
+// AVR Platform
+#elif ( defined(__AVR__) || defined( __AVR ) ) && __AVR__ == 1
+#define KRAKEN_ARCH KRAKEN_ARCH_AVR 
+
 #else
 #define KRAKEN_ARCH                     0x0
 #endif
-#endif
+
+#endif // KRAKEN_ARCH
 
 
 #define KRAKEN_SCHEDULE_THREAD( runtime, function_name )\
@@ -187,7 +195,7 @@ struct kraken_runtime* runtime\
 }\
 
 
-// debug settings
+// if in debug build
 #ifdef KRAKEN_DEBUG
 #include <stdio.h>
 #endif
