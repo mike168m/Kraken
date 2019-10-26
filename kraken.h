@@ -101,11 +101,11 @@
 /// Fortunately, modern operating systems have this functionality built into them.
 /// There's even a good chance your programming language comes with support for threads
 /// So why does kraken exist? 
-//==============================================================================
+//===========================================================================================
 //
 //                                  MACROS
 //
-//==============================================================================
+//===========================================================================================
 #ifndef KRAKEN_H
 #define KRAKEN_H
 
@@ -144,9 +144,11 @@
 
 #elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
 // use 2mb stacks for 64bit architectures
-#define KRAKEN_STACK_SIZE               1024 * 1024 * 2
+#define KRAKEN_STACK_SIZE               512
 
 #endif // KRAKEN_ARCH == KRAKEN_ARCH_X86
+
+#define KRAKEN_STACK_SIZE               512
 
 #endif // !defined( KRAKEN_STACK_SIZE )
 
@@ -207,11 +209,11 @@ struct kraken_runtime* runtime\
 #include <stdbool.h>
 
 
-//========================================================
+//===========================================================================================
 //
 //               LOCAL STRUCTURES & ENUMS
 //
-//========================================================
+//===========================================================================================
 
 
 /// ## Structs & Enums
@@ -229,18 +231,21 @@ struct kraken_runtime* runtime\
 ///     uint64_t    r13;
 ///     uint64_t    rbx;
 ///     uint64_t    rbp;
+/// ...
 /// #elif KRAKEN_ARCH == KRAKEN_ARCH_X86
 ///     uint32_t    esp;
 ///     uint32_t    ebx;
 ///     uint32_t    ebp;
+/// ...
 /// #elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
 ///     uint8_t     r20;
 ///     uint8_t     r24;
 ///     uint8_t     sp ;
+/// ...
 /// };
 /// ```
 /// Member  | Description  
-/// --------|-----------------------------------------------------
+/// --------|--------------------------------------------------------------------------------
 /// STOPPED | Indicates a thread has been stopped
 /// RUNNING | Indicates a thread currently being executed on the processor
 /// READY   | Indicates a thread that is ready to run on a processor core
@@ -310,7 +315,7 @@ struct kraken_context
 /// };
 /// ```
 /// Member  | Description  
-/// --------|-----------------------------------------------------
+/// --------|--------------------------------------------------------------------------------
 /// STOPPED | Indicates a thread has been stopped
 /// RUNNING | Indicates a thread currently being executed on the processor
 /// READY   | Indicates a thread that is ready to run on a processor core
@@ -334,7 +339,7 @@ enum kraken_status
 /// };
 /// ```
 /// Member       | Description  
-/// -------------|-----------------------------------------------------
+/// -------------|---------------------------------------------------------------------------
 /// context      | The state of the processor during the thread's execution
 /// status       | The status of the thread during program execution.
 /// stack_ptr    | A pointer to the first byte of the thread's stack
@@ -357,7 +362,7 @@ struct kraken_thread
 /// };
 /// ```
 /// Member       | Description  
-/// -------------|-----------------------------------------------------
+/// -------------|---------------------------------------------------------------------------
 /// context      | The state of the processor during the thread's execution
 /// status       | The status of the thread during program execution.
 /// stack_ptr    | A pointer to the first byte of the thread's stack
@@ -371,11 +376,11 @@ struct kraken_runtime
 typedef void (*function_type)( struct kraken_runtime* );
 
 
-//==============================================================================
+//===========================================================================================
 //
 //                           FUNCTION PROTOTYPES
 //
-//==============================================================================
+//===========================================================================================
 struct kraken_runtime* kraken_initialize_runtime( void );
 
 
@@ -414,11 +419,11 @@ static void kraken_switch (
 );
 
 
-//==============================================================================
+//===========================================================================================
 //
 //                           FUNCTION IMPLEMENTATIONS
 //
-//==============================================================================
+//===========================================================================================
 
 
 /// ## Functions
@@ -429,7 +434,7 @@ static void kraken_switch (
 /// void kraken_print_thread_state ( struct kraken_thread* thread );
 /// ```
 /// Parameter | Description
-/// ----------|----------------------------------------------------------------
+/// ----------|------------------------------------------------------------------------------
 /// thread    | A pointer to a thread whose state you want to print.
 /// Does not return.
 static void kraken_print_thread_state
@@ -479,7 +484,7 @@ static void kraken_print_thread_state
 ///                                  bool                   only_current_thread );
 /// ```
 /// Parameter | Description
-/// ----------|----------------------------------------------------------------
+/// ----------|------------------------------------------------------------------------------
 /// thread    | A pointer to a thread whose state you want to print.
 /// Does not return.
 void kraken_print_state
@@ -513,7 +518,7 @@ void kraken_print_state
 ///                                  int                   return_code );
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// runtime     | A pointer to `struct kraken_runtime`.
 /// return_code | Program exit code you want to return with
 /// Does not return.
@@ -551,7 +556,7 @@ void __attribute__( ( noreturn ) ) kraken_run
 /// void kraken_initialize_runtime ( void ) 
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// void /**/   | No parameters!!!
 /// > Returns a pointer to `struct kraken_runtime`
 struct kraken_runtime* kraken_initialize_runtime
@@ -589,7 +594,7 @@ struct kraken_runtime* kraken_initialize_runtime
 ///                      struct kraken_runtime* runtime ) 
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// old_context | Old context
 /// new_context | New context
 /// runtime     | Pointer to a runtime
@@ -631,7 +636,7 @@ __asm__
     "movl   0x28(%esi), %ebx             \n\t"
     "movl   0x30(%esi), %ebp             \n\t"
 #elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
-
+    "mov    "
 #endif
 );
 
@@ -642,7 +647,7 @@ __asm__
 /// void kraken_initialize_runtime ( void ) 
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// runtime     | A pointer to `struct kraken_runtime`
 /// Does not return.
 static void kraken_guard
@@ -676,7 +681,7 @@ static void kraken_guard
 /// void kraken_initialize_runtime ( void )
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// runtime     | A pointer to `struct kraken_runtime`
 /// Does not return.
 bool kraken_yield
@@ -688,7 +693,7 @@ bool kraken_yield
     struct kraken_context *new_ctx             =       NULL;
     struct kraken_thread  *previous_thread     =       NULL;
     struct kraken_thread  *invalid_thread      =       NULL;
-    struct kraken_thread  *next_thread         =       NULL;N
+    struct kraken_thread  *next_thread         =       NULL;
 
 #if KRAKEN_SCHEDULER == KRAKEN_SCHEDULER_ROUND_ROBIN
     previous_thread = runtime->current_thread;
@@ -741,7 +746,7 @@ bool kraken_yield
 /// void kraken_initialize_runtime ( void )
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// runtime     | A pointer to `struct kraken_runtime`
 /// Does not return.
 int kraken_start_thread
@@ -751,7 +756,7 @@ int kraken_start_thread
 )
 {
     struct kraken_thread* new_thread = NULL;
-    const char* const thread_stack   = NULL;
+    const char* const thread_stack   = new_thread->stack;
 
     // look for a slot for the new thread;
     for ( new_thread = &runtime->threads[ 0 ]; true ;new_thread++ )
@@ -767,8 +772,6 @@ int kraken_start_thread
     }
 
     new_thread->stack = ( char* )malloc( KRAKEN_STACK_SIZE );
-
-    thread_stack = new_thread->stack;
 
     assert( ( NULL == thread_stack, "KRAKEN: Can't allocate memory for thread stack." ) );
 
