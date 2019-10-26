@@ -159,6 +159,7 @@
 // x86 platform
 #if (defined(__x86_64) || defined(__x86_64__)) && (__x86_64 == 1 || __x86_64__ == 1)
 #define KRAKEN_ARCH KRAKEN_ARCH_X86_64
+
 #elif (defined(__i386) || defined(__i386__)) && (__i386 == 1 || __i386__ == 1)
 #define KRAKEN_ARCH KRAKEN_ARCH_X86
 
@@ -168,6 +169,7 @@
 
 #else
 #define KRAKEN_ARCH                     0x0
+
 #endif
 
 #endif // KRAKEN_ARCH
@@ -259,8 +261,37 @@ struct kraken_context
     uint32_t    ebx;
     uint32_t    ebp;
 #elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
+    uint8_t     r1;
+    uint8_t     r2;
+    uint8_t     r3;
+    uint8_t     r4;
+    uint8_t     r5;
+    uint8_t     r6;
+    uint8_t     r7;
+    uint8_t     r8;
+    uint8_t     r9;
+    uint8_t     r10;
+    uint8_t     r11;
+    uint8_t     r12;
+    uint8_t     r13;
+    uint8_t     r14;
+    uint8_t     r15;
+    uint8_t     r16;
+    uint8_t     r17;
+    uint8_t     r18;
+    uint8_t     r19;
     uint8_t     r20;
+    uint8_t     r21;
+    uint8_t     r22;
+    uint8_t     r23;
     uint8_t     r24;
+    uint8_t     r25;
+    uint8_t     r26;
+    uint8_t     r27;
+    uint8_t     r28;
+    uint8_t     r29;
+    uint8_t     r30;
+    uint8_t     r31;
     uint8_t     sp;
 #else
     #error      "Architecture not defined or implemented for Kraken library!"
@@ -436,8 +467,10 @@ static void kraken_print_thread_state
             &current_thread->status,
             current_thread->status,
             current_thread->stack 
+#elif KRAKEN_ARCH == KRAKEN_ARCH_AVR 
+            "Thread %d address: %p.\n",0,NULL
 #endif
-                                    );
+         );
 } // kraken_print_thread_state
 
 
