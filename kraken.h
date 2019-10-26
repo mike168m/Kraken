@@ -131,6 +131,7 @@
 // Maximum number of threads
 #if !defined(KRAKEN_MAX_THREADS)
 #define KRAKEN_MAX_THREADS              0x04
+
 #endif // KRAKEN_MAX_THREADS
 
 
@@ -141,14 +142,11 @@
 // use 2mb stacks for 64bit architectures
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2
 
-#else
+#elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
 // use 2mb stacks for 64bit architectures
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2
 
 #endif // KRAKEN_ARCH == KRAKEN_ARCH_X86
-
-// use 2mb stacks for 64bit architectures
-#define KRAKEN_STACK_SIZE               1024 * 1024 * 2 
 
 #endif // !defined( KRAKEN_STACK_SIZE )
 
@@ -491,13 +489,15 @@ void kraken_print_state
 )
 {
 #ifdef KRAKEN_DEBUG
+    uint thread_idx;
+
     assert( runtime->current_thread != NULL );
 
     kraken_print_thread_state( runtime->current_thread );
 
     if ( only_current != true )
     {
-        for ( uint thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
+        for ( thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
         {
             kraken_print_thread_state( &runtime->threads[ thread_idx ] );
         }
@@ -523,6 +523,7 @@ void __attribute__( ( noreturn ) ) kraken_run
     int                     return_code
 )
 {
+    uint16_t thread_idx;
     if ( runtime->current_thread != &runtime->threads[ 0 ] )
     {
         runtime->current_thread->status = STOPPED;
@@ -532,7 +533,7 @@ void __attribute__( ( noreturn ) ) kraken_run
     while ( kraken_yield( runtime ) );
 
     // Free thread stack memory when done
-    for ( uint16_t thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
+    for ( thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
     {
         if ( NULL != runtime->threads[ thread_idx ].stack )
         {
@@ -558,6 +559,8 @@ struct kraken_runtime* kraken_initialize_runtime
     void
 )
 {
+    uint16_t thread_idx;
+    
     struct kraken_runtime* runtime = ( struct kraken_runtime* )
         calloc( 0, sizeof( struct kraken_runtime ) );
 
@@ -568,7 +571,7 @@ struct kraken_runtime* kraken_initialize_runtime
     const char* const thread_stack = runtime->current_thread->stack;
     assert( ( thread_stack == NULL, "KRAKEN: Can't allocate memory for thread stack." ) );
 
-    for ( uint16_t thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
+    for ( thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
     {
         runtime->threads[ thread_idx ].id = thread_idx;
     }
@@ -684,16 +687,18 @@ bool kraken_yield
     struct kraken_context *old_ctx             =       NULL;
     struct kraken_context *new_ctx             =       NULL;
     struct kraken_thread  *previous_thread     =       NULL;
+    struct kraken_thread  *invalid_thread      =       NULL;
+    struct kraken_thread  *next_thread         =       NULL;N
 
-#if KRAKEN_SCHEDULER==KRAKEN_SCHEDULER_ROUND_ROBIN
+#if KRAKEN_SCHEDULER == KRAKEN_SCHEDULER_ROUND_ROBIN
     previous_thread = runtime->current_thread;
 
     while ( previous_thread->status != READY )
     {
         // if the current thread is the last thread
-        struct kraken_thread *next_thread = previous_thread++;
+        next_thread = previous_thread++;
 
-        struct kraken_thread *invalid_thread = &runtime->threads[ KRAKEN_MAX_THREADS ];
+        invalid_thread = &runtime->threads[ KRAKEN_MAX_THREADS ];
 
         if ( next_thread == invalid_thread )
         {
@@ -745,7 +750,8 @@ int kraken_start_thread
     function_type           thread_func
 )
 {
-    struct kraken_thread* new_thread;
+    struct kraken_thread* new_thread = NULL;
+    const char* const thread_stack   = NULL;
 
     // look for a slot for the new thread;
     for ( new_thread = &runtime->threads[ 0 ]; true ;new_thread++ )
@@ -762,11 +768,11 @@ int kraken_start_thread
 
     new_thread->stack = ( char* )malloc( KRAKEN_STACK_SIZE );
 
-    const char* const thread_stack = new_thread->stack;
+    thread_stack = new_thread->stack;
 
     assert( ( NULL == thread_stack, "KRAKEN: Can't allocate memory for thread stack." ) );
 
-    if ( NULL == new_thread->stack )
+    if ( NULL == thread_stack )
     {
         return -1;
     }
