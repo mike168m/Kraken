@@ -73,11 +73,14 @@
 
 /// ## Internals
 /// ***
-/// A processor is always executing one instruction from a process at any point in time but modern
-/// systems make it seems as if a gazillion are being executed at the same time. This isn't the
+/// A processor is always executing one instruction from a process at any point in time 
+/// but modern
+/// systems make it seems as if a gazillion are being executed at the same time.
+/// This isn't the
 /// case but rather the result of excellent engineering by those working on these systems.
 /// Today's operating and CPUs use nifty tricks to quickly switch between processes
-/// or blocks of instructions to give the appearance multiple processes running at the same time. 
+/// or blocks of instructions to give the appearance multiple processes running 
+/// at the same time. 
 /// ***********************************************************************
 /// * What it looks like      What's actually happening                   *
 /// *       .-.   .-.              .-.            .-.   /process B starts *
@@ -93,9 +96,12 @@
 /// *  v     v     v          v     v                \                    *
 /// *  o     o     o          o     o                 process B ends      *
 /// ***********************************************************************
-/// This "switch" is called a context switch. During each switch the processor state (registers,
-/// stack pointer etc) is saved for use later and new values are loaded to execute a new process.
-/// This operation varies between various operating systems and this is just a general overview
+/// This "switch" is called a context switch. During each switch the processor state
+/// (registers,
+/// stack pointer etc) is saved for use later and new values are loaded to execute a 
+/// new process.
+/// This operation varies between various operating systems and this is just a general 
+/// overview
 /// of it.
 ///
 /// Fortunately, modern operating systems have this functionality built into them.
@@ -165,7 +171,7 @@
 
 // AVR Platform
 #elif ( defined(__AVR__) || defined( __AVR ) ) && __AVR__ == 1
-#define KRAKEN_ARCH KRAKEN_ARCH_AVR 
+#define KRAKEN_ARCH KRAKEN_ARCH_AVR
 
 #else
 #define KRAKEN_ARCH                     0x0
@@ -182,16 +188,30 @@
 }\
 
 
-#define KRAKEN_THREAD_FUNCTION(name, code)\
+#define KRAKEN_X86_64_THREAD_FUNCTION( name, code )\
 /*__attribute__( ( regparm( 1 ), noinline ) )*/\
 void name\
 (\
-struct kraken_runtime* runtime\
+    struct kraken_runtime* runtime\
 )\
 {\
     __asm__\
     (\
     "movq   %rax, -8(%rbp)  \n\t"\
+    );\
+    code\
+}\
+
+
+#define KRAKEN_AVR_THREAD_FUNCTION( name, code )\
+void name\
+(\
+    struct kraken_runtime* runtime\
+)\
+{\
+    __asm__\
+    (\
+    "nop                      \n\t"\
     );\
     code\
 }\
@@ -494,7 +514,7 @@ void kraken_print_state
 )
 {
 #ifdef KRAKEN_DEBUG
-    uint thread_idx;
+    uint8_t thread_idx;
 
     assert( runtime->current_thread != NULL );
 
@@ -605,12 +625,13 @@ __asm__
     "_kraken_switch:                     \n\t"
     "kraken_switch:                      \n\t"
 #if KRAKEN_ARCH == KRAKEN_ARCH_X86_64
-#ifdef KRAKEN_DEBUG
-#if KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1 
-    // interrupt gdb if build type is debug.
-    "int    $3                           \n\t"
-#endif // KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1
-#endif // KRAKEN_DEBUG
+//#ifdef KRAKEN_DEBUG
+//#if KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1 
+//    // interrupt gdb if build type is debug.
+//    "int    $3                           \n\t"
+//#endif // KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1
+//#endif // KRAKEN_DEBUG
+#warning "COMPILING FOR X86_64"
     "movq   %rsp,       0x00(%rdi)       \n\t"
     "movq   %r15,       0x08(%rdi)       \n\t"
     "movq   %r14,       0x10(%rdi)       \n\t"
@@ -629,6 +650,7 @@ __asm__
     // jump to thread's function
     "ret                                 \n\t"
 #elif KRAKEN_ARCH == KRAKEN_ARCH_X86
+#warning "COMPILING FOR X86"
     "movl   %esp,       0x00(%edi)       \n\t"
     "movl   %ebx,       0x28(%edi)       \n\t"
     "movl   %ebp,       0x30(%edi)       \n\t"
@@ -636,7 +658,8 @@ __asm__
     "movl   0x28(%esi), %ebx             \n\t"
     "movl   0x30(%esi), %ebp             \n\t"
 #elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
-    "mov    "
+#warning "COMPILING FOR AVR"
+    "mov    r15,         r12             \n\t"
 #endif
 );
 
@@ -659,8 +682,12 @@ static void kraken_guard
     // Helpful for debugging.
     __asm__
     (
+#if KRAKEN_ARCH == KRAKEN_ARCH_X86_64    
     "movq   %rdi, %rax                   \n\t"
     "movq   %rax, -0x8(%rbp)             \n\t"
+#elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
+    "nop                                 \n\t"
+#endif
     );
     
     assert( NULL != runtime );
