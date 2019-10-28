@@ -101,11 +101,11 @@
 /// Fortunately, modern operating systems have this functionality built into them.
 /// There's even a good chance your programming language comes with support for threads
 /// So why does kraken exist? 
-//==============================================================================
+//===========================================================================================
 //
 //                                  MACROS
 //
-//==============================================================================
+//===========================================================================================
 #ifndef KRAKEN_H
 #define KRAKEN_H
 
@@ -131,6 +131,7 @@
 // Maximum number of threads
 #if !defined(KRAKEN_MAX_THREADS)
 #define KRAKEN_MAX_THREADS              0x04
+
 #endif // KRAKEN_MAX_THREADS
 
 
@@ -141,28 +142,37 @@
 // use 2mb stacks for 64bit architectures
 #define KRAKEN_STACK_SIZE               1024 * 1024 * 2
 
-#else
+#elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
 // use 2mb stacks for 64bit architectures
-#define KRAKEN_STACK_SIZE               1024 * 1024 * 2
+#define KRAKEN_STACK_SIZE               512
 
 #endif // KRAKEN_ARCH == KRAKEN_ARCH_X86
 
-// use 2mb stacks for 64bit architectures
-#define KRAKEN_STACK_SIZE               1024 * 1024 * 2 
+#define KRAKEN_STACK_SIZE               512
 
 #endif // !defined( KRAKEN_STACK_SIZE )
 
 
 // architecture selection
 #ifndef KRAKEN_ARCH
+
+// x86 platform
 #if (defined(__x86_64) || defined(__x86_64__)) && (__x86_64 == 1 || __x86_64__ == 1)
 #define KRAKEN_ARCH KRAKEN_ARCH_X86_64
+
 #elif (defined(__i386) || defined(__i386__)) && (__i386 == 1 || __i386__ == 1)
 #define KRAKEN_ARCH KRAKEN_ARCH_X86
+
+// AVR Platform
+#elif ( defined(__AVR__) || defined( __AVR ) ) && __AVR__ == 1
+#define KRAKEN_ARCH KRAKEN_ARCH_AVR 
+
 #else
 #define KRAKEN_ARCH                     0x0
+
 #endif
-#endif
+
+#endif // KRAKEN_ARCH
 
 
 #define KRAKEN_SCHEDULE_THREAD( runtime, function_name )\
@@ -187,7 +197,7 @@ struct kraken_runtime* runtime\
 }\
 
 
-// debug settings
+// if in debug build
 #ifdef KRAKEN_DEBUG
 #include <stdio.h>
 #endif
@@ -197,14 +207,13 @@ struct kraken_runtime* runtime\
 #include <stdint.h>
 #include <assert.h>
 #include <stdbool.h>
-#include <strings.h>
 
 
-//========================================================
+//===========================================================================================
 //
 //               LOCAL STRUCTURES & ENUMS
 //
-//========================================================
+//===========================================================================================
 
 
 /// ## Structs & Enums
@@ -222,18 +231,21 @@ struct kraken_runtime* runtime\
 ///     uint64_t    r13;
 ///     uint64_t    rbx;
 ///     uint64_t    rbp;
+/// ...
 /// #elif KRAKEN_ARCH == KRAKEN_ARCH_X86
 ///     uint32_t    esp;
 ///     uint32_t    ebx;
 ///     uint32_t    ebp;
+/// ...
 /// #elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
 ///     uint8_t     r20;
 ///     uint8_t     r24;
 ///     uint8_t     sp ;
+/// ...
 /// };
 /// ```
 /// Member  | Description  
-/// --------|-----------------------------------------------------
+/// --------|--------------------------------------------------------------------------------
 /// STOPPED | Indicates a thread has been stopped
 /// RUNNING | Indicates a thread currently being executed on the processor
 /// READY   | Indicates a thread that is ready to run on a processor core
@@ -252,8 +264,37 @@ struct kraken_context
     uint32_t    ebx;
     uint32_t    ebp;
 #elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
+    uint8_t     r1;
+    uint8_t     r2;
+    uint8_t     r3;
+    uint8_t     r4;
+    uint8_t     r5;
+    uint8_t     r6;
+    uint8_t     r7;
+    uint8_t     r8;
+    uint8_t     r9;
+    uint8_t     r10;
+    uint8_t     r11;
+    uint8_t     r12;
+    uint8_t     r13;
+    uint8_t     r14;
+    uint8_t     r15;
+    uint8_t     r16;
+    uint8_t     r17;
+    uint8_t     r18;
+    uint8_t     r19;
     uint8_t     r20;
+    uint8_t     r21;
+    uint8_t     r22;
+    uint8_t     r23;
     uint8_t     r24;
+    uint8_t     r25;
+    uint8_t     r26;
+    uint8_t     r27;
+    uint8_t     r28;
+    uint8_t     r29;
+    uint8_t     r30;
+    uint8_t     r31;
     uint8_t     sp;
 #else
     #error      "Architecture not defined or implemented for Kraken library!"
@@ -274,7 +315,7 @@ struct kraken_context
 /// };
 /// ```
 /// Member  | Description  
-/// --------|-----------------------------------------------------
+/// --------|--------------------------------------------------------------------------------
 /// STOPPED | Indicates a thread has been stopped
 /// RUNNING | Indicates a thread currently being executed on the processor
 /// READY   | Indicates a thread that is ready to run on a processor core
@@ -298,7 +339,7 @@ enum kraken_status
 /// };
 /// ```
 /// Member       | Description  
-/// -------------|-----------------------------------------------------
+/// -------------|---------------------------------------------------------------------------
 /// context      | The state of the processor during the thread's execution
 /// status       | The status of the thread during program execution.
 /// stack_ptr    | A pointer to the first byte of the thread's stack
@@ -321,7 +362,7 @@ struct kraken_thread
 /// };
 /// ```
 /// Member       | Description  
-/// -------------|-----------------------------------------------------
+/// -------------|---------------------------------------------------------------------------
 /// context      | The state of the processor during the thread's execution
 /// status       | The status of the thread during program execution.
 /// stack_ptr    | A pointer to the first byte of the thread's stack
@@ -335,11 +376,11 @@ struct kraken_runtime
 typedef void (*function_type)( struct kraken_runtime* );
 
 
-//==============================================================================
+//===========================================================================================
 //
 //                           FUNCTION PROTOTYPES
 //
-//==============================================================================
+//===========================================================================================
 struct kraken_runtime* kraken_initialize_runtime( void );
 
 
@@ -378,11 +419,11 @@ static void kraken_switch (
 );
 
 
-//==============================================================================
+//===========================================================================================
 //
 //                           FUNCTION IMPLEMENTATIONS
 //
-//==============================================================================
+//===========================================================================================
 
 
 /// ## Functions
@@ -393,7 +434,7 @@ static void kraken_switch (
 /// void kraken_print_thread_state ( struct kraken_thread* thread );
 /// ```
 /// Parameter | Description
-/// ----------|----------------------------------------------------------------
+/// ----------|------------------------------------------------------------------------------
 /// thread    | A pointer to a thread whose state you want to print.
 /// Does not return.
 static void kraken_print_thread_state
@@ -401,7 +442,9 @@ static void kraken_print_thread_state
     struct kraken_thread*  current_thread
 )
 {
-    printf( "Thread %d address: %p.\n\
+    printf(
+#if KRAKEN_ARCH == KRAKEN_ARCH_X86_64 
+            "Thread %d address: %p.\n\
             context addr %p\n\
             \trsp: %p\n\
             \tr15: %d\n\
@@ -426,7 +469,11 @@ static void kraken_print_thread_state
             current_thread->context.rbp,
             &current_thread->status,
             current_thread->status,
-            current_thread->stack );
+            current_thread->stack 
+#elif KRAKEN_ARCH == KRAKEN_ARCH_AVR 
+            "Thread %d address: %p.\n",0,NULL
+#endif
+         );
 } // kraken_print_thread_state
 
 
@@ -437,7 +484,7 @@ static void kraken_print_thread_state
 ///                                  bool                   only_current_thread );
 /// ```
 /// Parameter | Description
-/// ----------|----------------------------------------------------------------
+/// ----------|------------------------------------------------------------------------------
 /// thread    | A pointer to a thread whose state you want to print.
 /// Does not return.
 void kraken_print_state
@@ -447,13 +494,15 @@ void kraken_print_state
 )
 {
 #ifdef KRAKEN_DEBUG
+    uint thread_idx;
+
     assert( runtime->current_thread != NULL );
 
     kraken_print_thread_state( runtime->current_thread );
 
     if ( only_current != true )
     {
-        for ( uint thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
+        for ( thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
         {
             kraken_print_thread_state( &runtime->threads[ thread_idx ] );
         }
@@ -469,7 +518,7 @@ void kraken_print_state
 ///                                  int                   return_code );
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// runtime     | A pointer to `struct kraken_runtime`.
 /// return_code | Program exit code you want to return with
 /// Does not return.
@@ -479,6 +528,7 @@ void __attribute__( ( noreturn ) ) kraken_run
     int                     return_code
 )
 {
+    uint16_t thread_idx;
     if ( runtime->current_thread != &runtime->threads[ 0 ] )
     {
         runtime->current_thread->status = STOPPED;
@@ -488,7 +538,7 @@ void __attribute__( ( noreturn ) ) kraken_run
     while ( kraken_yield( runtime ) );
 
     // Free thread stack memory when done
-    for ( uint16_t thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
+    for ( thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
     {
         if ( NULL != runtime->threads[ thread_idx ].stack )
         {
@@ -506,7 +556,7 @@ void __attribute__( ( noreturn ) ) kraken_run
 /// void kraken_initialize_runtime ( void ) 
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// void /**/   | No parameters!!!
 /// > Returns a pointer to `struct kraken_runtime`
 struct kraken_runtime* kraken_initialize_runtime
@@ -514,10 +564,10 @@ struct kraken_runtime* kraken_initialize_runtime
     void
 )
 {
+    uint16_t thread_idx;
+    
     struct kraken_runtime* runtime = ( struct kraken_runtime* )
-        malloc( sizeof( struct kraken_runtime ) );
-
-    bzero( runtime, sizeof( struct kraken_runtime ) );
+        calloc( 0, sizeof( struct kraken_runtime ) );
 
     runtime->current_thread         = &runtime->threads[ 0 ];
     runtime->current_thread->status = RUNNING;
@@ -526,7 +576,7 @@ struct kraken_runtime* kraken_initialize_runtime
     const char* const thread_stack = runtime->current_thread->stack;
     assert( ( thread_stack == NULL, "KRAKEN: Can't allocate memory for thread stack." ) );
 
-    for ( uint16_t thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
+    for ( thread_idx = 0; thread_idx < KRAKEN_MAX_THREADS; thread_idx++ )
     {
         runtime->threads[ thread_idx ].id = thread_idx;
     }
@@ -544,7 +594,7 @@ struct kraken_runtime* kraken_initialize_runtime
 ///                      struct kraken_runtime* runtime ) 
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// old_context | Old context
 /// new_context | New context
 /// runtime     | Pointer to a runtime
@@ -586,7 +636,7 @@ __asm__
     "movl   0x28(%esi), %ebx             \n\t"
     "movl   0x30(%esi), %ebp             \n\t"
 #elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
-
+    "mov    "
 #endif
 );
 
@@ -597,7 +647,7 @@ __asm__
 /// void kraken_initialize_runtime ( void ) 
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// runtime     | A pointer to `struct kraken_runtime`
 /// Does not return.
 static void kraken_guard
@@ -631,7 +681,7 @@ static void kraken_guard
 /// void kraken_initialize_runtime ( void )
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// runtime     | A pointer to `struct kraken_runtime`
 /// Does not return.
 bool kraken_yield
@@ -642,16 +692,18 @@ bool kraken_yield
     struct kraken_context *old_ctx             =       NULL;
     struct kraken_context *new_ctx             =       NULL;
     struct kraken_thread  *previous_thread     =       NULL;
+    struct kraken_thread  *invalid_thread      =       NULL;
+    struct kraken_thread  *next_thread         =       NULL;
 
-#if KRAKEN_SCHEDULER==KRAKEN_SCHEDULER_ROUND_ROBIN
+#if KRAKEN_SCHEDULER == KRAKEN_SCHEDULER_ROUND_ROBIN
     previous_thread = runtime->current_thread;
 
     while ( previous_thread->status != READY )
     {
         // if the current thread is the last thread
-        struct kraken_thread *next_thread = previous_thread++;
+        next_thread = previous_thread++;
 
-        struct kraken_thread *invalid_thread = &runtime->threads[ KRAKEN_MAX_THREADS ];
+        invalid_thread = &runtime->threads[ KRAKEN_MAX_THREADS ];
 
         if ( next_thread == invalid_thread )
         {
@@ -694,7 +746,7 @@ bool kraken_yield
 /// void kraken_initialize_runtime ( void )
 /// ```
 /// Parameter   | Description
-/// ------------|----------------------------------------------------------------
+/// ------------|----------------------------------------------------------------------------
 /// runtime     | A pointer to `struct kraken_runtime`
 /// Does not return.
 int kraken_start_thread
@@ -703,7 +755,8 @@ int kraken_start_thread
     function_type           thread_func
 )
 {
-    struct kraken_thread* new_thread;
+    struct kraken_thread* new_thread = NULL;
+    const char* const thread_stack   = new_thread->stack;
 
     // look for a slot for the new thread;
     for ( new_thread = &runtime->threads[ 0 ]; true ;new_thread++ )
@@ -720,11 +773,9 @@ int kraken_start_thread
 
     new_thread->stack = ( char* )malloc( KRAKEN_STACK_SIZE );
 
-    const char* const thread_stack = new_thread->stack;
-
     assert( ( NULL == thread_stack, "KRAKEN: Can't allocate memory for thread stack." ) );
 
-    if ( NULL == new_thread->stack )
+    if ( NULL == thread_stack )
     {
         return -1;
     }
