@@ -1,5 +1,7 @@
+#define KRAKEN_DEBUG
+#define KRAKEN_SCHEDULER   0x01
+#define KRAKEN_MAX_THREADS 0x04
 #include "kraken.h"
-//#include <gtest/gtest.h>
 
 
 int main
@@ -7,8 +9,6 @@ int main
     void
 )
 {
-    //testing::InitGoogleTest(&argc, argv);
-    //return RUN_ALL_TESTS();
 }
 
 

@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 
-KRAKEN_THREAD_FUNCTION( t1,
+KRAKEN_AVR_THREAD_FUNCTION( t1,
 {
     static int i = 0;
     for ( ; i < 10; i++ ) 
@@ -18,7 +18,7 @@ KRAKEN_THREAD_FUNCTION( t1,
 })
 
 
-KRAKEN_THREAD_FUNCTION( t2,
+KRAKEN_AVR_THREAD_FUNCTION( t2,
 {
     static int i = 0; 
     for (; i < 10; i++ ) 
