@@ -217,6 +217,20 @@ void name\
 }\
 
 
+#define KRAKEN_X86_THREAD_FUNCTION( name, code )\
+void name\
+(\
+    struct kraken_runtime* runtime\
+)\
+{\
+    __asm__\
+    (\
+    "mov    %eax, -8(ebp)    \n\t"\
+    );\
+    code\
+}\
+
+
 // if in debug build
 #ifdef KRAKEN_DEBUG
 #include <stdio.h>
