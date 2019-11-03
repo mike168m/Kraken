@@ -39,7 +39,7 @@ set( CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "" )
 set( CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "" )
 
 
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
 
 
 include_directories(.)
@@ -52,6 +52,11 @@ add_executable( kraken_demo
 
 set( GCC_DEBUG_OPTIONS "-pg" )
 set( GCC_PRINT_VERSION "-v"  )
+if ( BUILD_AVR )
+    add_compile_options( "-mmcu=atmega8" )
+    add_compile_options( "-mcall-prologues" )
+    add_compile_options( "-Wl,--section_start,.data=0x801100,--defsym=__heap_end=0x80ffff" )
+endif ()
 add_compile_options( ${GCC_DEBUG_OPTIONS}
                      ${GCC_PRINT_VERSION} )
 
@@ -70,7 +75,7 @@ add_definitions( "-funsigned-bitfields" )
 add_definitions( "-ffunction-sections" )
 add_definitions( "-c" )
 add_definitions( "-std=gnu99" ) 
-add_definitions( "-mmcu=atmega8" )
+#add_definitions( "--defsym=__heap_end=0x80ffff" )
 
 
 if ( BUILD_DOCS )
@@ -89,5 +94,5 @@ add_executable( kraken_test
 
 
 if ( BUILD_AVR ) 
-    target_link_libraries( kraken_test "m" "c" "g" )
+    target_link_libraries( kraken_test "m" "c" )
 endif()
