@@ -7,6 +7,7 @@ set( CMAKE_SYSTEM_NAME Generic )
 
 option( BUILD_AVR  "BUILD_AVR"  OFF )
 option( BUILD_X86  "BUILD_x86"  OFF )
+option( BUILD_X64  "BUILD_X64"  OFF )
 option( BUILD_ARM  "BUILD_ARM"  OFF )
 option( BUILD_DOCS "BUILD_DOCS" OFF )
 
@@ -21,8 +22,8 @@ if ( BUILD_AVR )
     set( ENV{CXX}           "/usr/bin/avr-g++" )
     set( CMAKE_C_COMPILER   "/usr/bin/avr-gcc" )
     set( CMAKE_CXX_COMPILER "/usr/bin/avr-g++" )
-elseif ( BUILD_x86 OR BUILD_x64 )
-    set( ARCH_TYPE "X86" )
+elseif ( BUILD_X86 OR BUILD_X64 )
+    set( ARCH_TYPE          "X86" )
     set( CMAKE_C_COMPILER   "/usr/bin/gcc" )
     set( CMAKE_CXX_COMPILER "/usr/bin/g++" )
 endif( BUILD_AVR )
@@ -57,21 +58,22 @@ add_compile_options( ${GCC_DEBUG_OPTIONS}
 
 # taken from 
 #:wgithub.com/mkleemann/cmake-avr/blob/master/CMakeLists.txt.sample
-# compiler options for all build types
-add_definitions( "-DF_CPU=8000")
-add_definitions( "-fpack-struct")
-add_definitions( "-fshort-enums")
-#add_definitions("-Wall")
-#add_definitions("-Werror")
-#add_definitions("-pedantic")
-#add_definitions("-pedantic-errors")
-add_definitions( "-funsigned-char" )
-add_definitions( "-funsigned-bitfields" )
-add_definitions( "-ffunction-sections" )
-add_definitions( "-c" )
-add_definitions( "-std=gnu99" ) 
-add_definitions( "-mmcu=atmega8" )
-
+if ( BUILD_AVR )
+    # compiler options for all build types
+    add_definitions( "-DF_CPU=8000")
+    add_definitions( "-fpack-struct")
+    add_definitions( "-fshort-enums")
+    #add_definitions("-Wall")
+    #add_definitions("-Werror")
+    #add_definitions("-pedantic")
+    #add_definitions("-pedantic-errors")
+    add_definitions( "-funsigned-char" )
+    add_definitions( "-funsigned-bitfields" )
+    add_definitions( "-ffunction-sections" )
+    add_definitions( "-c" )
+    add_definitions( "-std=gnu99" ) 
+    add_definitions( "-mmcu=atmega8" )
+endif()
 
 if ( BUILD_DOCS )
     add_custom_target( KRAKEN_DOCS
