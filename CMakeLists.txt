@@ -78,7 +78,7 @@ endif()
 if ( BUILD_DOCS )
     add_custom_target( KRAKEN_DOCS
                        COMMAND echo '====== building docs ====='
-                       COMMAND stddoc < kraken.h > docs/kraken_doc.html
+                       COMMAND stddoc < kraken.h > docs/index.html
                        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} )
 
     add_dependencies( kraken_demo KRAKEN_DOCS )
