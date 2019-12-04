@@ -115,17 +115,14 @@
 #ifndef KRAKEN_H
 #define KRAKEN_H
 
-
 #ifndef KRAKEN_VERSION 
-#define KRAKEN_VERSION                  "0.9.1"
+    #define KRAKEN_VERSION                  "0.9.1"
 #endif // KRAKEN_VERSION
-
 
 // Scheduler implementation codes for preprocessor
 #define KRAKEN_SCHEDULER_ROUND_ROBIN    0x01
 #define KRAKEN_SCHEDULER_FIFO           0x02
 #define KRAKEN_SCHEDULER_FAIR           0x04
-
 
 // Architecture codes
 #define KRAKEN_ARCH_AVR                 0x11
@@ -133,60 +130,45 @@
 #define KRAKEN_ARCH_X86                 0x13
 #define KRAKEN_ARCH_ARM                 0x14
 
-
 // Maximum number of threads
 #if !defined(KRAKEN_MAX_THREADS)
-#define KRAKEN_MAX_THREADS              0x04
-
+    #define KRAKEN_MAX_THREADS              0x04
 #endif // KRAKEN_MAX_THREADS
 
 
 // Maxium stack size
 #if !defined( KRAKEN_STACK_SIZE )
-
-#if KRAKEN_ARCH == KRAKEN_ARCH_X86
-// use 2mb stacks for 64bit architectures
-#define KRAKEN_STACK_SIZE               1024 * 1024 * 2
-
-#elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
-// use 2mb stacks for 64bit architectures
-#define KRAKEN_STACK_SIZE               512
-
-#endif // KRAKEN_ARCH == KRAKEN_ARCH_X86
-
-#define KRAKEN_STACK_SIZE               512
-
+    #if KRAKEN_ARCH == KRAKEN_ARCH_X86
+        // use 2mb stacks for 64bit architectures
+        #define KRAKEN_STACK_SIZE               1024 * 1024 * 2
+    #elif KRAKEN_ARCH == KRAKEN_ARCH_AVR
+        // use 2mb stacks for 64bit architectures
+        #define KRAKEN_STACK_SIZE               512
+    #endif // KRAKEN_ARCH == KRAKEN_ARCH_X86
+    #define KRAKEN_STACK_SIZE               512
 #endif // !defined( KRAKEN_STACK_SIZE )
 
 
 // architecture selection
 #ifndef KRAKEN_ARCH
-
-// x86 platform
-#if (defined(__x86_64) || defined(__x86_64__)) && (__x86_64 == 1 || __x86_64__ == 1)
-#define KRAKEN_ARCH KRAKEN_ARCH_X86_64
-
-#elif (defined(__i386) || defined(__i386__)) && (__i386 == 1 || __i386__ == 1)
-#define KRAKEN_ARCH KRAKEN_ARCH_X86
-
-// AVR Platform
-#elif ( defined(__AVR__) || defined( __AVR ) ) && __AVR__ == 1
-#define KRAKEN_ARCH KRAKEN_ARCH_AVR
-
-#else
-#define KRAKEN_ARCH                     0x0
-
-#endif
-
+    // x86 platform
+    #if (defined(__x86_64) || defined(__x86_64__)) && (__x86_64 == 1 || __x86_64__ == 1)
+        #define KRAKEN_ARCH KRAKEN_ARCH_X86_64
+    #elif (defined(__i386) || defined(__i386__)) && (__i386 == 1 || __i386__ == 1)
+        #define KRAKEN_ARCH KRAKEN_ARCH_X86
+    // AVR Platform
+    #elif ( defined(__AVR__) || defined( __AVR ) ) && __AVR__ == 1
+        #define KRAKEN_ARCH KRAKEN_ARCH_AVR
+    #else
+        #define KRAKEN_ARCH                     0x0
+    #endif
 #endif // KRAKEN_ARCH
-
 
 #define KRAKEN_SCHEDULE_THREAD( runtime, function_name )\
 {\
     int success = kraken_start_thread( runtime, function_name );\
     assert( -1 < success );\
 }\
-
 
 #define KRAKEN_X86_64_THREAD_FUNCTION( name, code )\
 /*__attribute__( ( regparm( 1 ), noinline ) )*/\
@@ -202,7 +184,6 @@ void name\
     code\
 }\
 
-
 #define KRAKEN_AVR_THREAD_FUNCTION( name, code )\
 void name\
 (\
@@ -215,7 +196,6 @@ void name\
     );\
     code\
 }\
-
 
 #define KRAKEN_X86_THREAD_FUNCTION( name, code )\
 void name\
@@ -230,12 +210,10 @@ void name\
     code\
 }\
 
-
 // if in debug build
 #ifdef KRAKEN_DEBUG
-#include <stdio.h>
+    #include <stdio.h>
 #endif
-
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -639,12 +617,12 @@ __asm__
     "_kraken_switch:                     \n\t"
     "kraken_switch:                      \n\t"
 #if KRAKEN_ARCH == KRAKEN_ARCH_X86_64
-//#ifdef KRAKEN_DEBUG
-//#if KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1 
-//    // interrupt gdb if build type is debug.
-//    "int    $3                           \n\t"
-//#endif // KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1
-//#endif // KRAKEN_DEBUG
+#ifdef KRAKEN_DEBUG
+#if KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1 
+   // interrupt gdb if build type is debug.
+   "int    $3                           \n\t"
+#endif // KRAKEN_ENABLE_BREAK_BEFORE_SWITCH == 0x1
+#endif // KRAKEN_DEBUG
 #warning "COMPILING FOR X86_64"
     "movq   %rsp,       0x00(%rdi)       \n\t"
     "movq   %r15,       0x08(%rdi)       \n\t"
