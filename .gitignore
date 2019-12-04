@@ -8,8 +8,8 @@
 !analyze_core_dump.sh
 !.travis.yml
 !deps/googletest
-!docs/index.html
-!docs/style.css
+#!docs/index.html
+#!docs/style.css
 !deps/simavr
 
 .gitmodules
