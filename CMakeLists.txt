@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
 
-
 set( CMAKE_SYSTEM_NAME Generic )
 
 #======= OPTIONS ==============================
@@ -32,27 +31,20 @@ message( "Configured to build for ${ARCH_TYPE}")
 
 #======= COMPILER SELECTION =====================
 
-
 project( kraken )
-
 
 set( CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "" )
 set( CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "" )
 
-
 set(CMAKE_C_STANDARD 11)
 
-
 include_directories(.)
-
 
 add_executable( kraken_demo
                 kraken.h 
                 kraken_demo.c )
 
-
 set( GCC_DEBUG_OPTIONS "-pg" )
-set( GCC_PRINT_VERSION "-v"  )
 add_compile_options( ${GCC_DEBUG_OPTIONS}
                      ${GCC_PRINT_VERSION} )
 
@@ -83,7 +75,6 @@ if ( BUILD_DOCS )
 
     add_dependencies( kraken_demo KRAKEN_DOCS )
 endif()
-
 
 add_executable( kraken_test
                 kraken.h
